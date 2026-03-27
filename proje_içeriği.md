@@ -1,0 +1,16 @@
+PROJE BAŞLIĞI:
+Güneş Enerjisi Santralleri (GES) için Otonom Drone ile Termal Denetim ve Bakım Optimizasyonu
+
+PROJE ÖZETİ:
+Geniş alanlara yayılan Güneş Enerjisi Santrallerinde (GES) meydana gelen panel arızalarının (hotspot, mikro çatlak, kirlenme) otonom insansız hava araçları (İHA) ile hızlı ve güvenli şekilde tespit edilmesini sağlamaktır. Bu tespitin ardından, donanımdan alınan verileri yapay zeka ile işleyerek arızanın enerji üretimine olan anlık etkisini hesaplamak ve maliyetleri minimize edecek en uygun bakım zamanını/rotasını belirleyen entegre bir karar destek sistemi geliştirmektir.
+
+Yenilenebilir enerji yatırımlarının artmasıyla santrallerin verimli işletilmesi kritik bir zorunluluk haline gelmiştir. Geleneksel arıza tespit yöntemleri, personelin el termalleriyle sahada gezmesine dayanan yavaş, maliyetli ve reaktif (arıza sonrası) süreçlerdir. Piyasada sadece drone ile görüntü alan sistemler bulunsa da, bu görsel veriyi doğrudan matematiksel optimizasyon modellerine bağlayan sistemler eksiktir.
+Projenin özgün değeri; donanım, derin öğrenme tabanlı görüntü işleme ve yöneylem araştırmasını tek bir döngüde birleştirmesidir. Sistem, sadece "arızayı bulmakla" kalmayıp, "Hangi arıza ne zaman tamir edilirse üretim kaybı ve bakım maliyeti minimum olur?" sorusunu otonom olarak yanıtlayarak literatürdeki operasyonel boşluğu doldurmaktadır.
+Proje, üç farklı mühendislik disiplininin eşgüdümlü çalışmasıyla üç ana modülde hayata geçirilecektir:
+    • Donanım ve Veri Toplama (Elektrik-Elektronik): İHA üzerine yüksek çözünürlüklü termal ve RGB kameraların entegrasyonu sağlanacaktır. Panellerden elde edilen verilerin güvenli iletimi, sensör kalibrasyonu ve zorlu hava koşullarına uygun gömülü sistem/güç yönetim devreleri tasarlanacaktır.
+    • Yapay Zeka ve Yazılım Mimarisi (Bilgisayar): Toplanan termal görüntülerdeki anormallikler, Evrişimli Sinir Ağları (CNN) gibi derin öğrenme modelleri ile yüksek doğrulukla sınıflandırılacaktır. Tespit edilen arızalar, geliştirilecek kullanıcı dostu bir arayüz (Dashboard) üzerinden tesisin dijital haritasına işlenecektir.
+    • Süreç Optimizasyonu (Endüstri): Tespit edilen arızaların yol açacağı enerji kaybı (fırsat maliyeti) ile tamir personeli/ekipman maliyeti matematiksel olarak modellenecektir. Bakım ekiplerinin sahaya yönlendirilmesi için Dinamik Araç Rotalama Problemi (VRP) algoritmaları ve Çok Amaçlı Optimizasyon teknikleri kullanılarak en verimli bakım çizelgesi (Scheduling) oluşturulacaktır.
+Projenin bilimsel, teknolojik ve sosyo-ekonomik çıktıları çok yönlüdür:
+    • Bilimsel Çıktılar: Yapay zeka tabanlı görüntü sınıflandırma ile endüstriyel bakım optimizasyonunun (Kestirimci Bakım) entegre çalıştığı yeni bir hibrit algoritma literatüre kazandırılacaktır.
+    • Teknolojik Çıktılar: Dışa bağımlılığı azaltacak, otonom arıza tespiti ve karar verme yeteneğine sahip, ticari potansiyeli yüksek (TRL seviyesi artırılmış) bir yazılım-donanım prototipi ortaya konacaktır.
+    • Sosyo-Ekonomik Çıktılar: Santrallerin enerji üretim verimliliği maksimize edilecek, arıza kaynaklı yangın gibi iş güvenliği riskleri azaltılacak ve plansız duruş maliyetleri minimuma indirilerek temiz enerji sektörünün karlılığı artırılacaktır.
