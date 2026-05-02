@@ -1,0 +1,5 @@
+data/
+yolo26n.pt
+yolo26s.pt
+models/
+runs/

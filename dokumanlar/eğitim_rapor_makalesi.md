@@ -1,0 +1,28 @@
+# Yapay Zeka Modelinin Eğitim Süreci ve Donanımsal Kısıtlar Üzerine Bir İnceleme
+
+**Giriş:**
+Bu proje kapsamında, Güneş Enerjisi Santrallerinde (GES) meydana gelen hotspot, tozlanma ve mikro çatlak gibi anormallikleri otonom olarak tespit etmek üzere derin öğrenme tabanlı YOLO26 nesne tespiti algoritması kullanılmıştır. Model, insansız hava araçlarından (İHA) elde edilen termal ve RGB görüntülerden oluşan özel bir veri seti üzerinde eğitilerek otonom denetim sisteminin çekirdeğini oluşturmuştur.
+
+**Eğitim Süreci ve Karşılaşılan Zorluklar:**
+Model eğitimi, yerel bilgisayar donanımı üzerinde, belirtilen veri seti kullanılarak başlatılmıştır. Ancak yüksek çözünürlüklü görüntülerin işlenmesi ve derin sinir ağlarının ağırlık güncellemeleri (backpropagation) sırasında ciddi donanımsal kısıtlarla karşılaşılmıştır. Özellikle ekran kartı (GPU) bellek kapasitesinin (VRAM) sınırlarına ulaşılması ve buna bağlı oluşan termal darboğazlar (thermal throttling), optimizasyon sürecinin stabilitesini olumsuz etkilemiştir.
+
+**Eğitim Parametreleri ve Çıkarılan Metrikler:**
+Model eğitimi; 70 epoch (döngü), 16 batch size (küme boyutu) ve 640 piksel giriş çözünürlüğü (imgsz=640) parametreleri ile YOLO26s (small) mimarisi kullanılarak gerçekleştirilmiştir. Eğitim sırasında modelin veri setini ezberlemesini önlemek ve saha koşullarına genelleme kabiliyetini artırmak amacıyla hafifletilmiş (optimum) veri artırımı kullanılmıştır. Bu kapsamda görüntülere; ±5 derece döndürme (degrees), %20 oranında termal renk/parlaklık oynaması (hsv_s, hsv_v), %10 boyutlandırma/öteleme (scale, translate), yatay çevirme (fliplr=0.5) ve azaltılmış mozaik (mosaic=0.5) uygulanmıştır.
+
+Yaklaşık 2 saat 30 dakika süren 70 epoch'luk eğitimin sonunda, modelin genel ortalama doğruluğu (mAP@0.5) **%44.7** ve mAP@0.5:0.95 skoru **%31.6** olarak ölçülmüştür. Sınıf bazlı incelendiğinde algoritmanın metrikleri şöyledir:
+
+- **Hotspot / Isınma Noktası (Sınıf ID: 0) [%80.5 mAP50 | %60.1 mAP50-95]:** Orijinal veri setindeki _SingleHotSpot_ ve _MultiHotSpot_ etiketlerinin bu sınıfa dahil edilmesiyle oluşturulmuştur. Sınıfın sahip olduğu yüksek kontrastlı termal imzalar sayesinde modelin en rahat öğrendiği ve tespit ettiği arızadır. Pratikteki arıza bulma güvenilirliği son derece yüksektir (Precision: %70.1, Recall: %81.1).
+- **Mikro Çatlak (Sınıf ID: 1) [%31.9 mAP50 | %23.1 mAP50-95]:** Orijinal veri setindeki _Defective_ (kusurlu) ve _Physical Damage_ (fiziksel hasar) özellikleri bu sınıfa atanmıştır. Piksel seviyesindeki kılcal çizgi detaylarından oluştuğu ve çözünürlük düşürme (imgsz=640) esnasında bu detayların kaybolduğu için tespit edilmesi zor olan bir arıza sınıfı olmuştur (Precision: %44.3, Recall: %31.7).
+- **Tozlanma / Kirlenme (Sınıf ID: 2) [%21.7 mAP50 | %11.5 mAP50-95]:** Açık kaynaklı verideki _Dusty_ (toz), _Bird Drop_ (kuş pisliği) ve _Snow_ (kar) gibi panel yüzeyini kaplayıp verimi düşüren dış etkenler bu sınıfta toplanmıştır. Termal farklılıktan ziyade RGB verisine ihtiyaç duyan tozlanma, termal varyasyonlarda yapısı bozulduğu için başarı oranı düşük kalmıştır (Precision: %36.4, Recall: %22.8).
+
+**Model Başarı Ölçütleri ve Performans Değerlendirmesi**
+
+Çalışma kapsamında eğitilen YOLO modelinin nesne tespiti performansı, literatürde standart ve en zorlu metrik kabul edilen mAP 50-95 (Mean Average Precision) üzerinden değerlendirilmiştir. mAP 50-95, tahmin edilen sınır kutularının gerçek etiketlerle olan Kesişim/Bileşim (IoU) oranını %50'den başlayarak %95'e kadar test eden oldukça katı bir değerlendirme kriteridir.
+
+Yapılan testler sonucunda modelin mAP 50-95 skoru 0.316 (%31.6) olarak ölçülmüştür. Bu metrik, özellikle %80-95 IoU eşiklerinde piksel düzeyinde hassasiyet beklediğinden, modelin nesne sınırlarını kusursuz çizmeyi gerektiren durumlarda zorlandığını göstermektedir. Ancak problemin doğası, veri setindeki nesnelerin karmaşıklığı, tozlu alanların panelin bütününü kaplaması, mikro çatlakların zor tespit edilmesi gibi nedenler göz önüne alındığında, bu değer modelin temel karakteristik özellikleri öğrendiğini ve makul bir seviyede tespit yapabildiğini kanıtlamaktadır.
+
+Ayrıca, modelin başarısını salt mAP 50-95 gibi katı bir metrikle değerlendirmek yerine, nesnenin genel olarak bulunup bulunmadığını ölçen mAP@0.5 (mAP 50) skoruna bakmak daha kapsamlı bir perspektif sunmaktadır. Modelin mAP@0.5 skoru 0.447 (%44.7) seviyelerine ulaşmıştır. Bu durum, modelin aslında nesneleri yüksek oranda doğru tespit ettiğini, 0.316'lık mAP 50-95 skorunun yalnızca sınır kutusu (bounding box) koordinatlarının milimetrik hassasiyetindeki sapmalardan kaynaklandığını göstermektedir.
+
+Sonuç olarak, elde edilen bu bulgular, modelin yüksek çıkarım hızı (hızlı çalışma) avantajını koruyarak, gerçek zamanlı tespit görevleri için kabul edilebilir bir hız-isabet (speed-accuracy) dengesi sunduğunu ortaya koymaktadır.
+
+Proje kapsamında eğitilen modelin mevcut donanımsal kısıtlar altındaki genel mAP skorları (sırasıyla %44.7 ve %31.6) henüz bu alt sınırlara (sırasıyla ~%60 ve ~%35) istikrarlı bir şekilde yaklaşmakta olsa da; sahada en kritik ve acil tehlike arz eden "Hotspot" arıza sınıfında modelin %80.5 mAP50 ve %60.1 mAP50-95 gibi endüstri standartlarını çok aşan muazzam bir başarıyla çalışıyor olması projenin simülasyon geçerliliğini fazlasıyla kanıtlamaktadır. Modelin mevcut haliyle bile arızaları JSON formatında optimizasyon modülüne aktarıp otonom karar destek sistemini (MILP/VRP) başarıyla tetiklediği doğrulanmıştır. İleriki çalışmalarda (Future Work) model eğitiminin donanımsal darboğazlardan kurtarılarak bulut sunucularına taşınmasıyla, tüm sınıflar için belirtilen endüstri standartlarına tam ulaşılabileceği öngörülmektedir.

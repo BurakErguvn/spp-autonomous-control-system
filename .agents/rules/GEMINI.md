@@ -1,0 +1,214 @@
+# GES Otonom Termal Denetim & Bakım Optimizasyon Sistemi — Proje Kuralları
+
+Bu belge, projenin teknik kararlarını yönlendiren bağlayıcı kurallardır.
+Mimari, dil, kütüphane veya yapı seçimlerinde bu kurallara aykırı öneride bulunulmamalıdır.
+
+---
+
+## 1. Proje Kimliği ve Kapsamı
+
+- **Proje adı:** Güneş Enerjisi Santralleri (GES) için Otonom İHA ile Termal Denetim ve Bakım Optimizasyonu
+- **Nitelik:** Bilgisayar destekli simülasyon (fiziksel uçuş YOK)
+- **Disiplinler:** Bilgisayar Müh. (CS × 3) · Elektrik-Elektronik Müh. (EE × 2) · Endüstri Müh. (IE × 3)
+- **Amaç:** Arızayı bulmak + en uygun bakım zamanını/rotasını otonom belirlemek (ikisi birden)
+
+---
+
+## 2. Sistem Mimarisi — Dört Katman (DEĞİŞTİRİLEMEZ)
+
+Sistem **kesinlikle** aşağıdaki dört gevşek bağlı (loosely coupled) modülden oluşur. Modüller arası iletişim yalnızca tanımlı arayüzlerle yapılır; katman atlanamaz.
+
+```
+[Veri Akış Modülü] → Görüntü Matrisi/Frame →
+  [YZ Modülü] → ariza_verileri.json →
+    [Optimizasyon Modülü] → Görev Çizelgesi + Rota →
+      [GUI Modülü] → Yönetici
+```
+
+### 2.1. Veri Akış Modülü (EE Simülasyonu)
+
+- Gerçek İHA **kullanılmaz**; önceden toplanmış termal + RGB veri seti zaman ayarlı beslenir.
+- Her kare ile birlikte `panel_id`, `gps [lat, lon]`, `uçuş_yüksekliği`, `sensör_değerleri` meta verisi (EXIF/Telemetry benzeri) iletilir.
+- Modül dışarıya yalnızca **ham görüntü + meta veri** çıkarır; arıza kararı vermez.
+
+### 2.2. YZ Modülü — CS Çekirdeği
+
+- Model: **YOLO26** (değiştirilemez; YOLOv8 veya başka mimari kullanılamaz)
+- Görev: Yalnızca **inference** (tespit). Eğitim bu modülün içinde yapılmaz, dışarıda tamamlanmış model yüklenir.
+- Tespit edilecek arıza sınıfları (üç sınıf, sabit):
+  - `hotspot` — ısınma noktası
+  - `mikro_catlak` — mikro çatlak
+  - `tozlanma` — kirlenme / toz birikimi
+- **Zorunlu çıktı formatı** — her tespit için tam olarak bu JSON şeması:
+
+  ```json
+  {
+    "timestamp": "ISO-8601",
+    "panel_id": <int>,
+    "gps": [<float_lat>, <float_lon>],
+    "hasar": "<hotspot|mikro_catlak|tozlanma>",
+    "koordinat": [<x>, <y>, <w>, <h>],
+    "guven_skoru": <float 0–1>
+  }
+  ```
+
+- JSON şemasına uymayan çıktı **kabul edilmez**; optimizasyon modülü bu şemayı okuyarak çalışır.
+- Model, GUI ile doğrudan konuşmaz; yalnızca JSON dosyasına/kuyruğuna yazar.
+
+### 2.3. Optimizasyon Modülü — IE Çekirdeği
+
+- Girdi: YZ modülünden gelen `ariza_verileri.json`
+- İki aşamalı hesaplama:
+  1. **Fırsat Maliyeti** = Arızanın engellediği kWh × anlık enerji piyasa fiyatı
+  2. **Bakım Maliyeti** = Teknisyen saat ücreti + araç/ekipman + yakıt
+- Karar modeli: **MILP** (Karma Tamsayılı Doğrusal Programlama)
+  - Amaç fonksiyonu: `Min(Bakım Maliyeti + Fırsat Maliyeti)`
+  - Kısıtlar: Günlük mesai süresi · İHA max denetim süresi · Arıza büyüme hızı
+- Rota çözücüsü: **VRP (Dinamik Araç Rotalama)**
+- İzin verilen kütüphaneler: `PuLP`, `SciPy`, `Gurobi`, `CPLEX`
+- Modül, GUI ile doğrudan konuşmaz; yalnızca görev çizelgesi + rota verisini çıkarır.
+
+### 2.4. GUI Modülü — Sunum Katmanı
+
+- Platform: **Masaüstü uygulama** (web tabanlı değil)
+- Kütüphane: `PyQt6` **veya** `CustomTkinter` (başka tercih edilemez)
+- Zorunlu bileşenler:
+  - Etkileşimli santral haritası (dijital ikiz) — arızalar kırmızı işaret/ısı haritası ile gösterilir
+  - Bakım Yönetim Kontrol Paneli — "Bu hafta yapılacak görevler" tablosu + yönlendirme paneli
+- GUI, YZ çıktısından **koordinat ve tipleri** ve optimizasyon çıktısından **rota + çizelgeyi** ayrı ayrı tüketir.
+
+---
+
+## 3. Teknoloji Yığını (Sabit)
+
+| Katman          | Teknoloji                     |
+| --------------- | ----------------------------- |
+| Dil             | Python 3.10+                  |
+| YZ / Görüntü    | YOLO26, PyTorch, CUDA         |
+| Optimizasyon    | PuLP / SciPy / Gurobi / CPLEX |
+| GUI             | PyQt6 veya CustomTkinter      |
+| Veri etiketleme | Roboflow veya CVAT            |
+| Veri formatı    | JSON (modüller arası)         |
+| Eğitim ortamı   | Linux, Python, CUDA           |
+
+> Yukarıdaki tabloya ekleme yapılabilir; ancak var olan satırlar kaldırılamaz ve yerlerine başka teknoloji geçirilemez.
+
+---
+
+## 4. Veri ve Arıza Tanımları
+
+- Tespit edilecek **yalnızca üç** arıza türü vardır: `hotspot`, `mikro_catlak`, `tozlanma`.
+- Yeni arıza sınıfı eklemek için IE ve CS birlikte karar vermelidir; tek taraflı ekleme yapılamaz.
+- Her panel benzersiz bir `panel_id` (tam sayı) ile tanımlanır.
+- GPS koordinatları `[lat, lon]` çifti olarak tutulur; başka format kullanılamaz.
+- Güven skoru `0.0–1.0` aralığında float'tır; eşik değeri varsayılan `0.5` (parametre olarak ayarlanabilir).
+
+---
+
+## 5. Modüller Arası Arayüz Kuralları
+
+- **Katman atlama yasaktır.** YZ, optimizasyon modülüne doğrudan fonksiyon çağrısı yapamaz; ara dosya veya kuyruk kullanılır.
+- **Dil bağımsızlığı.** Modüller arası veri değişimi her zaman JSON'dur; Python nesnesi veya pickle aktarılamaz.
+- **Eş zamanlı güncelleme.** GUI, YZ çıktısını (harita güncellemesi) ve optimizasyon çıktısını (çizelge) bağımsız olarak tüketebilmelidir.
+- **Hata yayılımı.** Bir modülün hatası diğer modülleri çökertmemelidir; her modül kendi istisnalarını yakalamalıdır.
+
+---
+
+## 6. Performans ve Metrik Hedefleri
+
+### YZ Modülü
+
+- mAP (Mean Average Precision) hedef: **≥ 0.85**
+- Raporlanan metrikler (zorunlu): Accuracy, Precision, Recall, F1-Score, Confusion Matrix, mAP
+- Çıktı formatı: `.json` veya `.csv` (her ikisi de desteklenmelidir)
+
+### Optimizasyon Modülü
+
+- MILP modelinin çözüm süresi kabul edilebilir sınırda tutulmalıdır (üretim senaryosu için ≤ 60 saniye).
+- VRP rotası gün bazlı çizelge üretmelidir.
+
+### Genel Sistem
+
+- Simülasyon boru hattı (pipeline) kesintisiz çalışmalıdır (arıza olmayan karelerde de döngü devam eder).
+
+---
+
+## 7. Senaryo Analizi Gereksinimleri
+
+Sistem **üç standart senaryo** üzerinde test edilmelidir (IE-7):
+
+| Senaryo | Açıklama                                | Beklenen Karar       |
+| ------- | --------------------------------------- | -------------------- |
+| A       | Tesisin %5'inde hafif kirlenme          | Bakımı ertele        |
+| B       | 2 farklı uç noktada kritik hotspot      | Acil müdahale rotası |
+| C       | Tesis genelinde dağınık mikro-çatlaklar | Kapsamlı VRP rotası  |
+
+- Her senaryo için geleneksel yöntem (run-to-failure / periyodik bakım) ile karşılaştırma yapılmalıdır.
+- Karşılaştırma sonuçları Python grafikleri veya Excel ile raporlanmalıdır.
+
+---
+
+## 8. Kodlama Standartları
+
+- **Dil:** Python, tüm kaynak dosyalar için.
+- **Biçim:** `black` ile otomatik formatlanmış kod kabul edilir.
+- **Lint:** `pylint` uyarıları giderilmelidir (en az E/F seviyesi hatasız).
+- **Test:** Her modül için birim testleri yazılmalıdır (`pytest`).
+- **Dökümentasyon:** Her public fonksiyon/sınıf için docstring zorunludur (Google stil).
+- **Versiyon kontrolü:** Her anlamlı değişiklik commit edilmeli; commit mesajı modül adını içermelidir (`[CS]`, `[EE]`, `[IE]`).
+- **Ortam:** Bağımlılıklar `requirements.txt` veya `pyproject.toml` ile yönetilmelidir.
+
+---
+
+## 9. Dosya ve Modül Yapısı (Önerilen)
+
+```
+disiplinlerarasi/
+├── data/                    # Ham veri seti (termal + RGB görüntüler)
+│   ├── raw/
+│   └── labeled/
+├── modules/
+│   ├── data_feeder/         # EE — Veri Akış Modülü
+│   ├── ai_inference/        # CS — YZ Modülü (YOLO26 inference)
+│   ├── optimization/        # IE — MILP + VRP çözücüsü
+│   └── gui/                 # GUI — PyQt6 / CustomTkinter
+├── models/                  # Eğitilmiş YOLO26 ağırlıkları (.pt / .pth)
+├── outputs/                 # ariza_verileri.json, gorev_cizelgesi.json
+├── tests/                   # Tüm modüllere ait pytest dosyaları
+├── requirements.txt
+└── main.py                  # Pipeline başlatıcı
+```
+
+- Her modül kendi `__init__.py` ve `README.md` dosyasına sahip olmalıdır.
+- `outputs/` dizini `.gitignore`'a eklenebilir; ancak örnek çıktılar repoda tutulmalıdır.
+
+---
+
+## 10. Kapsam Dışı (Yapılmayacaklar)
+
+Aşağıdakiler bu projenin kapsamı **dışındadır**; kod veya tasarım önerisinde bulunulmamalıdır:
+
+- Gerçek fiziksel İHA uçuşu veya donanım entegrasyonu
+- Web tabanlı arayüz (React, Vue, Flask/FastAPI dashboard vb.)
+- Bulut dağıtımı (AWS, GCP, Azure servis dağıtımı)
+- Gerçek zamanlı enerji piyasası API bağlantısı
+- Model eğitiminin GUI içinde yapılması
+- YOLO26 dışında başka model mimarisinin production inference için kullanılması
+
+---
+
+## 11. İş Paketi — Sorumluluk Matrisi
+
+| İş Paketi                          | CS        | EE  | IE        |
+| ---------------------------------- | --------- | --- | --------- |
+| İP 1 – Literatür & Mimari          | ✓         | ✓   | ✓         |
+| İP 2 – Veri Seti & Donanım Analizi | ✓         | ✓   | ✓         |
+| İP 3 – Ara Rapor                   | ✓         | ✓   | ✓         |
+| İP 4 – YZ Model Geliştirme         | **Lider** | —   | —         |
+| İP 5 – Optimizasyon Algoritmaları  | —         | —   | **Lider** |
+| İP 6 – Entegrasyon & Simülasyon    | ✓         | —   | ✓         |
+| İP 7 – Senaryo Analizi & Doğrulama | ✓         | ✓   | ✓         |
+| İP 8 – Final Rapor & Sunum         | ✓         | ✓   | ✓         |
+
+- **Lider** modülü değiştiren her PR, ilgili disiplin liderinin onayını gerektir.
+- Modüller arası arayüz değişiklikleri her üç disiplinin onayını gerektir.

@@ -1,0 +1,87 @@
+{
+  "generated_at": "2026-04-25T14:08:29+00:00",
+  "total_cost": 5000.0,
+  "tasks": [
+    {
+      "panel_id": 4,
+      "hasar": "hotspot",
+      "priority": "kritik",
+      "estimated_cost": 500.0,
+      "scheduled_date": "2026-04-26"
+    },
+    {
+      "panel_id": 8,
+      "hasar": "hotspot",
+      "priority": "kritik",
+      "estimated_cost": 500.0,
+      "scheduled_date": "2026-04-26"
+    },
+    {
+      "panel_id": 10,
+      "hasar": "hotspot",
+      "priority": "kritik",
+      "estimated_cost": 500.0,
+      "scheduled_date": "2026-04-26"
+    },
+    {
+      "panel_id": 10,
+      "hasar": "hotspot",
+      "priority": "kritik",
+      "estimated_cost": 500.0,
+      "scheduled_date": "2026-04-26"
+    },
+    {
+      "panel_id": 12,
+      "hasar": "mikro_catlak",
+      "priority": "orta",
+      "estimated_cost": 500.0,
+      "scheduled_date": "2026-04-26"
+    },
+    {
+      "panel_id": 18,
+      "hasar": "hotspot",
+      "priority": "kritik",
+      "estimated_cost": 500.0,
+      "scheduled_date": "2026-04-26"
+    },
+    {
+      "panel_id": 19,
+      "hasar": "mikro_catlak",
+      "priority": "orta",
+      "estimated_cost": 500.0,
+      "scheduled_date": "2026-04-26"
+    },
+    {
+      "panel_id": 20,
+      "hasar": "mikro_catlak",
+      "priority": "orta",
+      "estimated_cost": 500.0,
+      "scheduled_date": "2026-04-26"
+    },
+    {
+      "panel_id": 21,
+      "hasar": "mikro_catlak",
+      "priority": "orta",
+      "estimated_cost": 500.0,
+      "scheduled_date": "2026-04-26"
+    },
+    {
+      "panel_id": 25,
+      "hasar": "mikro_catlak",
+      "priority": "orta",
+      "estimated_cost": 500.0,
+      "scheduled_date": "2026-04-26"
+    }
+  ],
+  "route": [
+    12,
+    18,
+    19,
+    20,
+    21,
+    8,
+    10,
+    4,
+    25
+  ]
+}
