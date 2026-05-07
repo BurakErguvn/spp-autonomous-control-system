@@ -1,5 +1,29 @@
 {
-  "A — Hafif Kirlenme (%5)": {
+  "A — Hafif Tozlanma": {
+    "metrics": {
+      "Tespit Süresi (saat)": {
+        "run_to_failure": 72.0,
+        "periodic": 48.0,
+        "otonom": 1.0,
+        "tasarruf_pct_vs_rtf": 98.6
+      },
+      "Toplam Maliyet (₺)": {
+        "run_to_failure": 48.0,
+        "periodic": 47.0,
+        "otonom": 0.0,
+        "tasarruf_pct_vs_rtf": 100.0
+      },
+      "Enerji Kaybı (kWh)": {
+        "run_to_failure": 0.9,
+        "periodic": 0.3,
+        "otonom": 0.0,
+        "tasarruf_pct_vs_rtf": 100.0
+      }
+    },
+    "panel_count": 2,
+    "karar": "MILP: arızaların tamiri ekonomik değil — bakım ertelendi."
+  },
+  "B — Kritik Hotspot (2 nokta)": {
     "metrics": {
       "Tespit Süresi (saat)": {
         "run_to_failure": 72.0,
@@ -8,64 +32,43 @@
         "tasarruf_pct_vs_rtf": 96.5
       },
       "Toplam Maliyet (₺)": {
-        "run_to_failure": 8500,
-        "periodic": 6000,
-        "otonom": 4200,
-        "tasarruf_pct_vs_rtf": 50.6
+        "run_to_failure": 6768.0,
+        "periodic": 4056.0,
+        "otonom": 3141.0,
+        "tasarruf_pct_vs_rtf": 53.6
       },
       "Enerji Kaybı (kWh)": {
-        "run_to_failure": 320,
-        "periodic": 180,
-        "otonom": 45,
-        "tasarruf_pct_vs_rtf": 85.9
+        "run_to_failure": 54.0,
+        "periodic": 18.0,
+        "otonom": 0.6,
+        "tasarruf_pct_vs_rtf": 98.9
       }
     },
-    "karar": "Bakım ertelendi (güven: düşük)"
-  },
-  "B — Kritik Hotspot (2 nokta)": {
-    "metrics": {
-      "Tespit Süresi (saat)": {
-        "run_to_failure": 96.0,
-        "periodic": 48.0,
-        "otonom": 1.5,
-        "tasarruf_pct_vs_rtf": 98.4
-      },
-      "Toplam Maliyet (₺)": {
-        "run_to_failure": 22000,
-        "periodic": 15000,
-        "otonom": 8500,
-        "tasarruf_pct_vs_rtf": 61.4
-      },
-      "Enerji Kaybı (kWh)": {
-        "run_to_failure": 1200,
-        "periodic": 700,
-        "otonom": 120,
-        "tasarruf_pct_vs_rtf": 90.0
-      }
-    },
-    "karar": "Acil müdahale rotası oluşturuldu"
+    "panel_count": 2,
+    "karar": "2 görev, 3 ekip"
   },
   "C — Dağınık Mikro Çatlak": {
     "metrics": {
       "Tespit Süresi (saat)": {
-        "run_to_failure": 168.0,
-        "periodic": 96.0,
-        "otonom": 4.0,
-        "tasarruf_pct_vs_rtf": 97.6
+        "run_to_failure": 72.0,
+        "periodic": 48.0,
+        "otonom": 11.0,
+        "tasarruf_pct_vs_rtf": 84.7
       },
       "Toplam Maliyet (₺)": {
-        "run_to_failure": 45000,
-        "periodic": 28000,
-        "otonom": 16000,
-        "tasarruf_pct_vs_rtf": 64.4
+        "run_to_failure": 33935.0,
+        "periodic": 20645.0,
+        "otonom": 16201.0,
+        "tasarruf_pct_vs_rtf": 52.3
       },
       "Enerji Kaybı (kWh)": {
-        "run_to_failure": 2800,
-        "periodic": 1600,
-        "otonom": 380,
-        "tasarruf_pct_vs_rtf": 86.4
+        "run_to_failure": 67.5,
+        "periodic": 22.5,
+        "otonom": 0.8,
+        "tasarruf_pct_vs_rtf": 98.8
       }
     },
-    "karar": "Kapsamlı VRP rotası oluşturuldu"
+    "panel_count": 10,
+    "karar": "10 görev, 3 ekip"
   }
 }

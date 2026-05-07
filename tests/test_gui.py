@@ -46,13 +46,18 @@ SAMPLE_DETECTIONS = [
 
 SAMPLE_SCHEDULE = {
     "generated_at": "2026-03-27T10:16:00+00:00",
-    "total_cost": 3200.0,
+    "total_cost_tl": 3200.0,
+    "total_distance_km": 0.45,
+    "total_service_time_min": 52,
+    "team_count": 3,
     "tasks": [
         {
             "panel_id": 5,
             "hasar": "hotspot",
             "priority": "kritik",
             "estimated_cost": 1500.0,
+            "service_min": 45,
+            "team_id": 1,
             "scheduled_date": "2026-03-28",
         },
         {
@@ -60,10 +65,16 @@ SAMPLE_SCHEDULE = {
             "hasar": "tozlanma",
             "priority": "düşük",
             "estimated_cost": 300.0,
+            "service_min": 7,
+            "team_id": 2,
             "scheduled_date": "2026-04-05",
         },
     ],
-    "route": [0, 5, 12, 29],
+    "routes": {
+        "1": [5],
+        "2": [12],
+        "3": [],
+    },
 }
 
 
@@ -125,18 +136,23 @@ class TestMaintenancePanel:
         panel.on_schedule_updated(SAMPLE_SCHEDULE)
         assert panel._table.rowCount() == len(SAMPLE_SCHEDULE["tasks"])
 
-    def test_on_schedule_updated_populates_route(self, qtbot):
-        """Çizelge geldiğinde rota listesi doldurulmalı."""
+    def test_on_schedule_updated_populates_routes(self, qtbot):
+        """Çizelge geldiğinde 3 ekibin rota başlıkları gösterilmeli."""
         panel = MaintenancePanel()
         qtbot.addWidget(panel)
         panel.on_schedule_updated(SAMPLE_SCHEDULE)
-        assert panel._route_list.count() == len(SAMPLE_SCHEDULE["route"])
+        # 3 ekip başlığı + her atanan panel öğesi + boş ekip için placeholder
+        # SAMPLE_SCHEDULE: ekip 1 (1 panel), ekip 2 (1 panel), ekip 3 (boş)
+        # Beklenen: 3 başlık + 1 + 1 + 1 placeholder = 6
+        assert panel._route_list.count() == 6
 
     def test_empty_schedule_does_not_crash(self, qtbot):
         """Boş çizelge hata fırlatmamalı."""
         panel = MaintenancePanel()
         qtbot.addWidget(panel)
-        panel.on_schedule_updated({"tasks": [], "route": [], "total_cost": 0})
+        panel.on_schedule_updated(
+            {"tasks": [], "routes": {"1": [], "2": [], "3": []}, "total_cost_tl": 0}
+        )
 
 
 # ─────────────────────────────────────────────────────────────────────────────

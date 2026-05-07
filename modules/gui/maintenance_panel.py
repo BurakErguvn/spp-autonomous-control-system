@@ -33,7 +33,9 @@ TABLE_HEADERS = [
     "Panel ID",
     "Arıza Türü",
     "Öncelik",
-    "Tahmini Maliyet (₺)",
+    "Ekip",
+    "Süre (dk)",
+    "Maliyet (₺)",
     "Bakım Tarihi",
 ]
 
@@ -44,6 +46,9 @@ PRIORITY_COLORS: dict[str, str] = {
     "düşük": "#388E3C",
 }
 
+# Ekip bazlı renk paleti (3 ekip için)
+TEAM_COLORS: list[str] = ["#80CBC4", "#FFAB91", "#90CAF9"]
+
 
 class MaintenancePanel(QWidget):
     """Bakım Yönetim Kontrol Paneli.
@@ -51,22 +56,31 @@ class MaintenancePanel(QWidget):
     Optimizasyon modülünden gelen görev çizelgesini tablo olarak,
     VRP rotasını sıralı liste olarak gösterir.
 
-    Expected gorev_cizelgesi.json format::
+    Beklenen gorev_cizelgesi.json formatı::
 
         {
-            "generated_at": "2026-03-27T10:15:00",
-            "total_cost": 4500.0,
+            "generated_at": "...",
+            "total_cost_tl": 12450.0,
+            "total_distance_km": 4.2,
+            "total_service_time_min": 980,
+            "team_count": 3,
             "tasks": [
                 {
                     "panel_id": 12,
                     "hasar": "hotspot",
                     "priority": "kritik",
-                    "estimated_cost": 1200.0,
+                    "estimated_cost": 1570.0,
+                    "service_min": 45,
+                    "team_id": 1,
                     "scheduled_date": "2026-03-28"
                 },
                 ...
             ],
-            "route": [0, 12, 7, 23, 5]
+            "routes": {
+                "1": [12, 7],
+                "2": [23, 5],
+                "3": []
+            }
         }
 
     Example:
@@ -156,33 +170,59 @@ class MaintenancePanel(QWidget):
             schedule: gorev_cizelgesi.json içeriği.
         """
         tasks = schedule.get("tasks", [])
-        route = schedule.get("route", [])
-        total_cost = schedule.get("total_cost", 0.0)
+        routes = schedule.get("routes") or {}
+        # Geriye dönük uyumluluk: eski "route" alanı varsa tek ekip listesi olarak ele al
+        if not routes and "route" in schedule:
+            routes = {"1": schedule.get("route", [])}
+
+        total_cost = schedule.get("total_cost_tl", schedule.get("total_cost", 0.0))
+        total_km = schedule.get("total_distance_km", 0.0)
         generated_at = schedule.get("generated_at", "—")
 
-        self._update_summary(len(tasks), total_cost, generated_at)
+        self._update_summary(len(tasks), total_cost, total_km, generated_at, schedule.get("note"))
         self._populate_table(tasks)
-        self._populate_route(route)
+        self._populate_routes(routes)
 
-        logger.info("Bakım çizelgesi güncellendi: %d görev, %.0f₺", len(tasks), total_cost)
+        logger.info(
+            "Bakım çizelgesi güncellendi: %d görev | %.0f TL | %d ekip",
+            len(tasks),
+            total_cost,
+            len(routes),
+        )
 
     # ──────────────────────────────────────────────────────────────────────────
     # Private helpers
     # ──────────────────────────────────────────────────────────────────────────
 
-    def _update_summary(self, task_count: int, total_cost: float, generated_at: str) -> None:
+    def _update_summary(
+        self,
+        task_count: int,
+        total_cost: float,
+        total_km: float,
+        generated_at: str,
+        note: str | None = None,
+    ) -> None:
         """Özet satırını günceller."""
-        self._summary_label.setText(
+        text = (
             f"Toplam {task_count} görev  |  "
             f"Tahmini maliyet: {total_cost:,.0f} ₺  |  "
+            f"Mesafe: {total_km:.2f} km  |  "
             f"Oluşturulma: {generated_at}"
         )
+        if note:
+            text += f"\n{note}"
+        self._summary_label.setText(text)
         self._summary_label.setStyleSheet(
             "color: #B0BEC5; font-size: 12px; padding: 2px 0 8px 0;"
         )
 
     def _populate_table(self, tasks: list[dict]) -> None:
         """Görev listesini tabloya doldurur."""
+        if not tasks:
+            self._show_empty_state()
+            return
+
+        self._table.clearSpans()
         self._table.setRowCount(len(tasks))
 
         for row, task in enumerate(tasks):
@@ -190,6 +230,8 @@ class MaintenancePanel(QWidget):
                 str(task.get("panel_id", "—")),
                 task.get("hasar", "—"),
                 task.get("priority", "—"),
+                f"#{task.get('team_id', '—')}",
+                str(task.get("service_min", "—")),
                 f"{task.get('estimated_cost', 0):,.0f}",
                 task.get("scheduled_date", "—"),
             ]
@@ -207,29 +249,51 @@ class MaintenancePanel(QWidget):
 
                 self._table.setItem(row, col, item)
 
-    def _populate_route(self, route: list) -> None:
-        """VRP rotasını liste olarak gösterir."""
+    def _populate_routes(self, routes: dict) -> None:
+        """3 ekip için ayrı başlıklı rota listesi gösterir."""
         self._route_list.clear()
 
-        if not route:
+        if not routes:
             self._route_list.addItem("Rota bilgisi bekleniyor…")
             return
 
-        for step, panel_id in enumerate(route, start=1):
-            item = QListWidgetItem(f"  {step}. Panel #{panel_id}")
-            item.setForeground(QColor("#80CBC4"))
-            self._route_list.addItem(item)
+        any_visited = False
+        # Ekip ID'leri string ya da int olabilir; sırala
+        sorted_team_ids = sorted(routes.keys(), key=lambda k: int(k))
+        for idx, team_id in enumerate(sorted_team_ids):
+            panels = routes[team_id]
+            color = TEAM_COLORS[idx % len(TEAM_COLORS)]
+
+            header = QListWidgetItem(f"▼ Ekip #{team_id}  ({len(panels)} panel)")
+            header.setForeground(QColor(color))
+            font = header.font()
+            font.setBold(True)
+            self._route_list.addItem(header)
+
+            if not panels:
+                placeholder = QListWidgetItem("    (görev atanmadı)")
+                placeholder.setForeground(QColor("#616161"))
+                self._route_list.addItem(placeholder)
+                continue
+
+            any_visited = True
+            for step, panel_id in enumerate(panels, start=1):
+                item = QListWidgetItem(f"    {step}. Panel #{panel_id}")
+                item.setForeground(QColor(color))
+                self._route_list.addItem(item)
+
+        if not any_visited:
+            self._route_list.addItem("Hiç ekip görev almadı.")
 
     def _show_empty_state(self) -> None:
-        """İlk yüklemede boş durum mesajını gösterir."""
+        """İlk yüklemede veya görev olmadığında boş durum mesajını gösterir."""
+        self._table.clearSpans()
         self._table.setRowCount(1)
         placeholder = QTableWidgetItem("Optimizasyon çıktısı bekleniyor…")
         placeholder.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
         placeholder.setForeground(QColor("#616161"))
         self._table.setSpan(0, 0, 1, len(TABLE_HEADERS))
         self._table.setItem(0, 0, placeholder)
-
-        self._route_list.addItem("Rota bekleniyor…")
 
     @staticmethod
     def _group_style() -> str:

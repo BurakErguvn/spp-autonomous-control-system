@@ -1,0 +1,22 @@
+Parametre Adı,Değer,Birim,Açıklama
+Enerji Fiyatı (PTF),2,TL/kWh,Ortalama piyasa fiyatı
+Enerji Fiyatı (YEKDEM),4,TL/kWh,Teşvikli fiyat
+Hotspot Kayıp Oranı,0.20,-,Panel verim kaybı
+Mikro Çatlak Başlangıç,0.05,-,İlk aşama kayıp
+Mikro Çatlak Maks,0.20,-,Maksimum kayıp
+Tozlanma Aylık,0.10,-,Aylık verim kaybı
+İşçilik Maliyeti,200,TL/saat,Personel maliyeti
+Hotspot Süresi,45,dk,Müdahale süresi
+Panel Değişim Süresi,90,dk,Değişim süresi
+Temizlik Süresi,7,dk/panel,Temizlik süresi
+Diyot Maliyeti,100,TL,Malzeme maliyeti
+Panel Maliyeti,4500,TL,Panel değişim maliyeti
+Diyot Oranı,0.70,-,Olasılık
+Panel Oranı,0.30,-,Olasılık
+Ulaşım Maliyeti,3,TL/km,Yakıt maliyeti
+Günlük Mesai,480,dk,Günlük çalışma süresi
+Ekip Sayısı,3,adet,Toplam ekip
+İHA Uçuş Süresi,30,dk,Uçuş süresi
+İHA Kapasite,1000,panel,Tarama kapasitesi
+Geleneksel Bakım,2,kez/yıl,Kontrol sıklığı
+Geleneksel Maliyet,500000,TL/yıl,Yıllık maliyet

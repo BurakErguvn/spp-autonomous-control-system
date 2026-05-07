@@ -1,17 +1,5 @@
-# GES Otonom Termal Denetim & Bakım Optimizasyon Sistemi — Proje Kuralları
-
-Bu belge, projenin teknik kararlarını yönlendiren bağlayıcı kurallardır.
-Mimari, dil, kütüphane veya yapı seçimlerinde bu kurallara aykırı öneride bulunulmamalıdır.
-
 ---
-
-## 1. Proje Kimliği ve Kapsamı
-
-- **Proje adı:** Güneş Enerjisi Santralleri (GES) için Otonom İHA ile Termal Denetim ve Bakım Optimizasyonu
-- **Nitelik:** Bilgisayar destekli simülasyon (fiziksel uçuş YOK)
-- **Disiplinler:** Bilgisayar Müh. (CS × 3) · Elektrik-Elektronik Müh. (EE × 2) · Endüstri Müh. (IE × 3)
-- **Amaç:** Arızayı bulmak + en uygun bakım zamanını/rotasını otonom belirlemek (ikisi birden)
-
+alwaysApply: true
 ---
 
 ## 2. Sistem Mimarisi — Dört Katman (DEĞİŞTİRİLEMEZ)

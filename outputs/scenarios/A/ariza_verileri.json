@@ -1,0 +1,34 @@
+[
+  {
+    "timestamp": "2026-05-07T18:56:59+00:00",
+    "panel_id": 5,
+    "gps": [
+      38.42,
+      27.1415
+    ],
+    "hasar": "tozlanma",
+    "koordinat": [
+      100,
+      100,
+      80,
+      60
+    ],
+    "guven_skoru": 0.85
+  },
+  {
+    "timestamp": "2026-05-07T18:56:59+00:00",
+    "panel_id": 14,
+    "gps": [
+      38.4194,
+      27.1406
+    ],
+    "hasar": "tozlanma",
+    "koordinat": [
+      100,
+      100,
+      80,
+      60
+    ],
+    "guven_skoru": 0.85
+  }
+]

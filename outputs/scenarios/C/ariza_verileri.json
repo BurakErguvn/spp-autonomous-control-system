@@ -1,0 +1,162 @@
+[
+  {
+    "timestamp": "2026-05-07T18:56:59+00:00",
+    "panel_id": 0,
+    "gps": [
+      38.42,
+      27.14
+    ],
+    "hasar": "mikro_catlak",
+    "koordinat": [
+      100,
+      100,
+      80,
+      60
+    ],
+    "guven_skoru": 0.85
+  },
+  {
+    "timestamp": "2026-05-07T18:56:59+00:00",
+    "panel_id": 3,
+    "gps": [
+      38.42,
+      27.1409
+    ],
+    "hasar": "mikro_catlak",
+    "koordinat": [
+      100,
+      100,
+      80,
+      60
+    ],
+    "guven_skoru": 0.85
+  },
+  {
+    "timestamp": "2026-05-07T18:56:59+00:00",
+    "panel_id": 6,
+    "gps": [
+      38.4197,
+      27.14
+    ],
+    "hasar": "mikro_catlak",
+    "koordinat": [
+      100,
+      100,
+      80,
+      60
+    ],
+    "guven_skoru": 0.85
+  },
+  {
+    "timestamp": "2026-05-07T18:56:59+00:00",
+    "panel_id": 9,
+    "gps": [
+      38.4197,
+      27.1409
+    ],
+    "hasar": "mikro_catlak",
+    "koordinat": [
+      100,
+      100,
+      80,
+      60
+    ],
+    "guven_skoru": 0.85
+  },
+  {
+    "timestamp": "2026-05-07T18:56:59+00:00",
+    "panel_id": 12,
+    "gps": [
+      38.4194,
+      27.14
+    ],
+    "hasar": "mikro_catlak",
+    "koordinat": [
+      100,
+      100,
+      80,
+      60
+    ],
+    "guven_skoru": 0.85
+  },
+  {
+    "timestamp": "2026-05-07T18:56:59+00:00",
+    "panel_id": 15,
+    "gps": [
+      38.4194,
+      27.1409
+    ],
+    "hasar": "mikro_catlak",
+    "koordinat": [
+      100,
+      100,
+      80,
+      60
+    ],
+    "guven_skoru": 0.85
+  },
+  {
+    "timestamp": "2026-05-07T18:56:59+00:00",
+    "panel_id": 18,
+    "gps": [
+      38.4191,
+      27.14
+    ],
+    "hasar": "mikro_catlak",
+    "koordinat": [
+      100,
+      100,
+      80,
+      60
+    ],
+    "guven_skoru": 0.85
+  },
+  {
+    "timestamp": "2026-05-07T18:56:59+00:00",
+    "panel_id": 21,
+    "gps": [
+      38.4191,
+      27.1409
+    ],
+    "hasar": "mikro_catlak",
+    "koordinat": [
+      100,
+      100,
+      80,
+      60
+    ],
+    "guven_skoru": 0.85
+  },
+  {
+    "timestamp": "2026-05-07T18:56:59+00:00",
+    "panel_id": 24,
+    "gps": [
+      38.4188,
+      27.14
+    ],
+    "hasar": "mikro_catlak",
+    "koordinat": [
+      100,
+      100,
+      80,
+      60
+    ],
+    "guven_skoru": 0.85
+  },
+  {
+    "timestamp": "2026-05-07T18:56:59+00:00",
+    "panel_id": 27,
+    "gps": [
+      38.4188,
+      27.1409
+    ],
+    "hasar": "mikro_catlak",
+    "koordinat": [
+      100,
+      100,
+      80,
+      60
+    ],
+    "guven_skoru": 0.85
+  }
+]
