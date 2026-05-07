@@ -163,7 +163,7 @@ $$
 
 Kısıtlar:
 
-- **Güvenlik:** $x_i = 1$ — eğer $\text{hasar}(i) \in \{\text{hotspot}, \text{mikro\_catlak}\}$ (must_fix)
+- **Güvenlik:** $x_i = 1$ — eğer panelin hasarı `hotspot` veya `mikro_catlak` ise (must_fix)
 - **Kapasite:** $\sum_{i \in P} x_i \cdot s_i \le K \cdot D$ — toplam servis ≤ 3 ekip × 480 dk
 
 Burada $M_i$ = bakım maliyeti, $O_i$ = 30 günlük fırsat maliyeti,
@@ -173,8 +173,11 @@ $s_i$ = servis süresi, $K$ = ekip sayısı, $D$ = günlük mesai (dk).
 eliminasyonu):
 
 $$
-\min \sum_{(i,j) \in A} \sum_{k \in K} d_{ij} \cdot c_{\text{yakıt}} \cdot y_{ijk}
+\min \sum_{(i,j) \in A} \sum_{k \in K} d_{ij} \cdot c_f \cdot y_{ijk}
 $$
+
+burada $c_f$ = yakıt birim maliyeti (TL/km), $d_{ij}$ = $i$ ile $j$ arası
+mesafe (km), $y_{ijk} \in \{0,1\}$ = $k$. aracın $i \to j$ kullanımı.
 
 Kısıtlar (her araç $k \in \{1,2,3\}$ için):
 
@@ -291,12 +294,16 @@ TL/yıl** baseline kabul edilmiştir.
 
 #### 6.4.3 Geri Ödeme Süresi (Payback)
 
-$$
-\text{Yıllık net tasarruf} = 500.000 - 250.000 = \mathbf{250.000\ TL/yıl}
-$$
+**Yıllık net tasarruf** (TL/yıl):
 
 $$
-\text{Payback} = \frac{500.000\ \text{TL (CAPEX)}}{250.000\ \text{TL/yıl}} = \mathbf{2\ yıl}
+500{.}000 - 250{.}000 = \mathbf{250{.}000}
+$$
+
+**Geri ödeme süresi** (yıl):
+
+$$
+\frac{500{.}000}{250{.}000} = \mathbf{2}
 $$
 
 Hassasiyet:
