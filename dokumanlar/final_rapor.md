@@ -157,31 +157,31 @@ veri seti dengesizliği nedeniyle daha düşük metrikler. Detaylar
 
 **Aşama 1 — MILP Seçim** (Karma Tamsayılı Doğrusal Programlama):
 
-\[
+$$
 \min \sum_{i \in P} \left[ x_i \cdot M_i + (1-x_i) \cdot O_i \right]
-\]
+$$
 
 Kısıtlar:
 
-- **Güvenlik:** \( x_i = 1 \) — eğer hasar(i) ∈ {hotspot, mikro_catlak} (must_fix)
-- **Kapasite:** \( \sum_{i \in P} x_i \cdot s_i \le K \cdot D \) — toplam servis ≤ 3 ekip × 480 dk
+- **Güvenlik:** $x_i = 1$ — eğer $\text{hasar}(i) \in \{\text{hotspot}, \text{mikro\_catlak}\}$ (must_fix)
+- **Kapasite:** $\sum_{i \in P} x_i \cdot s_i \le K \cdot D$ — toplam servis ≤ 3 ekip × 480 dk
 
-Burada \(M_i\) = bakım maliyeti, \(O_i\) = 30 günlük fırsat maliyeti,
-\(s_i\) = servis süresi.
+Burada $M_i$ = bakım maliyeti, $O_i$ = 30 günlük fırsat maliyeti,
+$s_i$ = servis süresi, $K$ = ekip sayısı, $D$ = günlük mesai (dk).
 
 **Aşama 2 — CVRP Atama** (Capacitated Vehicle Routing, MTZ subtour
 eliminasyonu):
 
-\[
+$$
 \min \sum_{(i,j) \in A} \sum_{k \in K} d_{ij} \cdot c_{\text{yakıt}} \cdot y_{ijk}
-\]
+$$
 
-Kısıtlar (her araç k ∈ {1,2,3} için):
+Kısıtlar (her araç $k \in \{1,2,3\}$ için):
 
-- Müşteri başına bir kez ziyaret: \( \sum_k \sum_j y_{ijk} = 1 \)
-- Akış denkliği: \( \sum_i y_{ihk} = \sum_j y_{hjk} \)
-- Kapasite: \( \sum_{i \in P} s_i \sum_j y_{ijk} \le D \)
-- MTZ: \( u_{ik} - u_{jk} + N \cdot y_{ijk} \le N - 1 \)
+- **Tek ziyaret:** $\sum_k \sum_j y_{ijk} = 1, \quad \forall i \in P$
+- **Akış denkliği:** $\sum_i y_{ihk} = \sum_j y_{hjk}, \quad \forall h, k$
+- **Kapasite:** $\sum_{i \in P} s_i \sum_j y_{ijk} \le D, \quad \forall k$
+- **MTZ subtour:** $u_{ik} - u_{jk} + N \cdot y_{ijk} \le N - 1$
 
 ### 5.3 Çözüm Yaklaşımı
 
@@ -291,13 +291,13 @@ TL/yıl** baseline kabul edilmiştir.
 
 #### 6.4.3 Geri Ödeme Süresi (Payback)
 
-\[
-\text{Yıllık net tasarruf} = 500.000 - 250.000 = \mathbf{250.000\;TL/yıl}
-\]
+$$
+\text{Yıllık net tasarruf} = 500.000 - 250.000 = \mathbf{250.000\ TL/yıl}
+$$
 
-\[
-\text{Payback} = \frac{500.000\;\text{TL (CAPEX)}}{250.000\;\text{TL/yıl}} = \mathbf{2\;yıl}
-\]
+$$
+\text{Payback} = \frac{500.000\ \text{TL (CAPEX)}}{250.000\ \text{TL/yıl}} = \mathbf{2\ yıl}
+$$
 
 Hassasiyet:
 - Optimist (CAPEX %20 düşük, geleneksel maliyet %20 yüksek): **payback ≈ 1.3 yıl**
