@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-05-07T18:57:09+00:00",
-  "total_cost_tl": 16201.47,
-  "total_distance_km": 0.49,
-  "total_service_time_min": 600,
+  "generated_at": "2026-06-07T10:46:40+00:00",
+  "total_cost_tl": 14581.27,
+  "total_distance_km": 0.424,
+  "total_service_time_min": 540,
   "team_count": 3,
   "tasks": [
     {
@@ -11,8 +11,8 @@
       "priority": "orta",
       "estimated_cost": 1620.0,
       "service_min": 60,
-      "team_id": 2,
-      "scheduled_date": "2026-05-08"
+      "team_id": 1,
+      "scheduled_date": "2026-06-08"
     },
     {
       "panel_id": 3,
@@ -20,8 +20,8 @@
       "priority": "orta",
       "estimated_cost": 1620.0,
       "service_min": 60,
-      "team_id": 3,
-      "scheduled_date": "2026-05-08"
+      "team_id": 2,
+      "scheduled_date": "2026-06-08"
     },
     {
       "panel_id": 6,
@@ -29,8 +29,8 @@
       "priority": "orta",
       "estimated_cost": 1620.0,
       "service_min": 60,
-      "team_id": 1,
-      "scheduled_date": "2026-05-08"
+      "team_id": 2,
+      "scheduled_date": "2026-06-08"
     },
     {
       "panel_id": 9,
@@ -38,8 +38,8 @@
       "priority": "orta",
       "estimated_cost": 1620.0,
       "service_min": 60,
-      "team_id": 3,
-      "scheduled_date": "2026-05-08"
+      "team_id": 2,
+      "scheduled_date": "2026-06-08"
     },
     {
       "panel_id": 12,
@@ -47,8 +47,8 @@
       "priority": "orta",
       "estimated_cost": 1620.0,
       "service_min": 60,
-      "team_id": 3,
-      "scheduled_date": "2026-05-08"
+      "team_id": 2,
+      "scheduled_date": "2026-06-08"
     },
     {
       "panel_id": 15,
@@ -56,17 +56,8 @@
       "priority": "orta",
       "estimated_cost": 1620.0,
       "service_min": 60,
-      "team_id": 3,
-      "scheduled_date": "2026-05-08"
-    },
-    {
-      "panel_id": 18,
-      "hasar": "mikro_catlak",
-      "priority": "orta",
-      "estimated_cost": 1620.0,
-      "service_min": 60,
-      "team_id": 3,
-      "scheduled_date": "2026-05-08"
+      "team_id": 2,
+      "scheduled_date": "2026-06-08"
     },
     {
       "panel_id": 21,
@@ -74,8 +65,8 @@
       "priority": "orta",
       "estimated_cost": 1620.0,
       "service_min": 60,
-      "team_id": 3,
-      "scheduled_date": "2026-05-08"
+      "team_id": 2,
+      "scheduled_date": "2026-06-08"
     },
     {
       "panel_id": 24,
@@ -83,8 +74,8 @@
       "priority": "orta",
       "estimated_cost": 1620.0,
       "service_min": 60,
-      "team_id": 3,
-      "scheduled_date": "2026-05-08"
+      "team_id": 2,
+      "scheduled_date": "2026-06-08"
     },
     {
       "panel_id": 27,
@@ -92,26 +83,24 @@
       "priority": "orta",
       "estimated_cost": 1620.0,
       "service_min": 60,
-      "team_id": 3,
-      "scheduled_date": "2026-05-08"
+      "team_id": 2,
+      "scheduled_date": "2026-06-08"
     }
   ],
   "routes": {
     "1": [
-      6
-    ],
-    "2": [
       0
     ],
-    "3": [
+    "2": [
       3,
       9,
       15,
       21,
       27,
       24,
-      18,
-      12
-    ]
+      12,
+      6
+    ],
+    "3": []
   }
 }

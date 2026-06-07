@@ -181,13 +181,12 @@ class TestJsonWatcher:
                 watcher.fault_detected.connect(received.append)
                 watcher.start()
 
-                # Dosyayı yaz
-                fault_path.write_text(
-                    json.dumps(SAMPLE_DETECTIONS), encoding="utf-8"
-                )
+                # Dosyayı yaz ve sinyalin gelmesini bekle
+                with qtbot.waitSignal(watcher.fault_detected, timeout=3000):
+                    fault_path.write_text(
+                        json.dumps(SAMPLE_DETECTIONS), encoding="utf-8"
+                    )
 
-                # Sinyalin gelmesini bekle
-                qtbot.waitSignal(watcher.fault_detected, timeout=3000)
                 watcher.stop()
 
                 assert len(received) >= 1

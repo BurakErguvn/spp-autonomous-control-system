@@ -258,19 +258,23 @@ class MaintenanceScheduler:
         panel_ids = sorted(panel_hasar.keys())
         x = {pid: pulp.LpVariable(f"x_{pid}", cat=pulp.LpBinary) for pid in panel_ids}
 
-        # Amaç
+        # Amaç: must_fix olan sınıflara (hotspot ve mikro_catlak) büyük bir teşvik (negative penalty)
+        # ekleyerek kapasite elverdiği ölçüde çözücünün bunları seçmesini zorluyoruz.
+        # Hotspot yangın riski taşıdığı için mikro_catlak'tan daha yüksek öncelik teşviki alır.
         objective = []
         for pid in panel_ids:
             hasar = panel_hasar[pid]
             mc = CostCalculator.maintenance_cost(hasar)
             oc = CostCalculator.opportunity_cost(hasar)
-            objective.append(x[pid] * (mc - oc) + oc)
+            coeff = mc - oc
+            
+            if hasar == "hotspot":
+                coeff -= 1000000.0
+            elif hasar == "mikro_catlak":
+                coeff -= 500000.0
+                
+            objective.append(x[pid] * coeff + oc)
         prob += pulp.lpSum(objective)
-
-        # Güvenlik kısıtı: hotspot ve mikro_catlak zorunlu tamir
-        for pid in panel_ids:
-            if panel_hasar[pid] in MUST_FIX_CLASSES:
-                prob += x[pid] == 1, f"must_fix_{pid}"
 
         # Kapasite kısıtı: Σ servis süresi ≤ ekip sayısı × günlük mesai
         capacity_min = Parameters.TEAM_COUNT * Parameters.DAILY_SHIFT_MIN
@@ -283,12 +287,26 @@ class MaintenanceScheduler:
             "daily_capacity",
         )
 
-        prob.solve(pulp.PULP_CBC_CMD(msg=False))
+        try:
+            prob.solve(pulp.PULP_CBC_CMD(msg=False))
+            status = pulp.LpStatus[prob.status]
+        except Exception as exc:
+            logger.warning("MILP çözücü çalıştırılamadı (%s) — sezgisel seçime geçiliyor.", exc)
+            selected_heur = []
+            total_time = 0
+            for hasar_type in ["hotspot", "mikro_catlak"]:
+                for pid, hasar in sorted(panel_hasar.items()):
+                    if hasar == hasar_type:
+                        s = CostCalculator.service_minutes(hasar)
+                        if total_time + s <= capacity_min:
+                            selected_heur.append(pid)
+                            total_time += s
+            return selected_heur
 
-        if pulp.LpStatus[prob.status] != "Optimal":
+        if status != "Optimal":
             logger.warning(
                 "MILP optimal değil (status=%s) — boş seçim döndürülüyor.",
-                pulp.LpStatus[prob.status],
+                status,
             )
             return []
 
@@ -312,6 +330,12 @@ class MaintenanceScheduler:
 
         if not panels:
             return empty_routes
+
+        # Büyük problem boyutları için çözücünün donmasını/uzun sürmesini engellemek amacıyla
+        # doğrudan sezgisel fallback (en yakın komşu) rotalamasını kullan
+        if len(panels) > 10:
+            logger.info("Panel sayısı (%d > 10) yüksek. Hızlı sezgisel rotalama kullanılıyor.", len(panels))
+            return self._cvrp_fallback(panels, panel_hasar)
 
         N = len(panels)
         nodes = list(range(N + 1))           # 0 = depo
@@ -411,12 +435,16 @@ class MaintenanceScheduler:
                             f"mtz_{i}_{j}_{k}",
                         )
 
-        solver = pulp.PULP_CBC_CMD(
-            msg=False, timeLimit=Parameters.CVRP_TIME_LIMIT_S
-        )
-        prob.solve(solver)
+        try:
+            solver = pulp.PULP_CBC_CMD(
+                msg=False, timeLimit=Parameters.CVRP_TIME_LIMIT_S
+            )
+            prob.solve(solver)
+            status = pulp.LpStatus[prob.status]
+        except Exception as exc:
+            logger.warning("CVRP çözücü çalıştırılamadı (%s) — sezgisel fallback'e geçiliyor.", exc)
+            return self._cvrp_fallback(panels, panel_hasar)
 
-        status = pulp.LpStatus[prob.status]
         if status not in {"Optimal", "Not Solved"}:
             logger.warning("CVRP çözüm durumu: %s — sezgisel fallback'e geçiliyor.", status)
             return self._cvrp_fallback(panels, panel_hasar)

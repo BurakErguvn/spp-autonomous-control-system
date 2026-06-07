@@ -1,14 +1,25 @@
 {
-  "generated_at": "2026-05-07T18:56:59+00:00",
-  "total_cost_tl": 0.0,
-  "total_distance_km": 0.0,
-  "total_service_time_min": 0,
+  "generated_at": "2026-06-07T10:46:32+00:00",
+  "total_cost_tl": 1620.78,
+  "total_distance_km": 0.261,
+  "total_service_time_min": 60,
   "team_count": 3,
-  "tasks": [],
+  "tasks": [
+    {
+      "panel_id": 5,
+      "hasar": "mikro_catlak",
+      "priority": "orta",
+      "estimated_cost": 1620.0,
+      "service_min": 60,
+      "team_id": 3,
+      "scheduled_date": "2026-06-08"
+    }
+  ],
   "routes": {
     "1": [],
     "2": [],
-    "3": []
-  },
-  "note": "MILP: arızaların tamiri ekonomik değil — bakım ertelendi."
+    "3": [
+      5
+    ]
+  }
 }

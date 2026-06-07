@@ -27,13 +27,15 @@ for frame, meta in feeder.iter_frames(scenario="B"):
     process(frame, meta)
 ```
 
-## Senaryolar
+## Senaryolar ve Tasarım Amaçları
 
-| ID | Hedef sınıf  | Paneller             | Beklenen sonuç          |
-| -- | ------------ | -------------------- | ----------------------- |
-| A  | tozlanma     | 5, 14                | Bakımı ertele           |
-| B  | hotspot      | 0, 29                | Acil müdahale rotası    |
-| C  | mikro_catlak | 0, 3, 6, …, 27 (10x) | Kapsamlı VRP rotası     |
-| —  | rastgele     | 0–29 tamamı          | Tam koşum               |
+Sistemdeki test senaryoları, Yapay Zeka ve Optimizasyon (MILP/VRP) modüllerinin kısıtlarını ve mantıksal karar mekanizmalarını doğrulamak için özel olarak tasarlanmıştır.
 
-`scenario=None` verildiğinde tüm 30 panel sırayla tarama listesine alınır.
+| ID | Hedef Sınıf | Taranan Paneller | Beklenen Sonuç | Tasarım Amacı ve Matematiksel/Operasyonel Mantık |
+| :--- | :--- | :--- | :--- | :--- |
+| **A** | Tozlanma | `5, 14` | Bakımı ertele | **Akıllı Erteleme Kontrolü:** Tesisin çok küçük bir kısmında (%5) hafif tozlanma simüle edilir. Panellerin temizleme işçilik ve yakıt maliyeti, getirecekleri enerji üretim kazancından yüksek olduğu için MILP modelinin bu bakımı "ekonomik dışı" bularak ertelemesi (0 görev) beklenir. |
+| **B** | Hotspot | `0, 29` | Acil müdahale rotası | **Güvenlik (Must-Fix) ve Coğrafi Uç Noktalar:** Yangın riski oluşturan hotspot arızaları ekonomik fizibiliteden bağımsız olarak zorunlu tamir edilmelidir. Ayrıca 0 ve 29. paneller santralin coğrafi olarak birbirine en zıt köşeleridir. VRP rotalama algoritmasının bu uzak iki zıt noktaya minimum seyahat maliyetiyle nasıl ekip yönlendireceğini doğrular. |
+| **C** | Mikro Çatlak | `0, 3, 6, …, 27` (10x) | Kapsamlı VRP rotası | **Kapasite ve Yük Dağılımı (Load Balancing):** Mikro çatlakların tamir süresi uzundur (panel başına 60 dk). Dağınık 10 panelin tamiri, ekiplerin günlük mesai kapasitelerini (3 ekip x 8 saat = 24 saat) zorlar. VRP çözücünün iş yükünü 3 ayrı ekibe en kısa seyahat mesafesiyle ve dengeli şekilde nasıl paylaştıracağını (subtour eliminasyonunu) doğrular. |
+| **—** | Rastgele | `0–29` (Tümü) | Tam Koşum | **Genel Sistem Testi:** İHA'nın tüm santrali tarayarak hem sağlıklı hem arızalı panelleri analiz ettiği tam simülasyon modudur. |
+
+`scenario=None` (veya belirtilmediğinde) tüm 30 panel sırayla tarama listesine alınır ve veri setinden rastgele görüntüler beslenir.

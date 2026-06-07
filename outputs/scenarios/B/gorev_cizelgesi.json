@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-07T18:56:59+00:00",
+  "generated_at": "2026-06-07T10:46:34+00:00",
   "total_cost_tl": 3141.12,
   "total_distance_km": 0.374,
   "total_service_time_min": 90,
@@ -12,7 +12,7 @@
       "estimated_cost": 1570.0,
       "service_min": 45,
       "team_id": 3,
-      "scheduled_date": "2026-05-08"
+      "scheduled_date": "2026-06-08"
     },
     {
       "panel_id": 29,
@@ -21,7 +21,7 @@
       "estimated_cost": 1570.0,
       "service_min": 45,
       "team_id": 3,
-      "scheduled_date": "2026-05-08"
+      "scheduled_date": "2026-06-08"
     }
   ],
   "routes": {

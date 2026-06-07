@@ -96,6 +96,17 @@ def run_pipeline(
         frame_count += 1
         meta["timestamp"] = make_timestamp()
         detections = detector.detect(frame, meta)
+        if not detections:
+            detections = [{
+                "timestamp": meta["timestamp"],
+                "panel_id": int(meta["panel_id"]),
+                "gps": meta["gps"],
+                "hasar": "sağlam",
+                "koordinat": [0, 0, 0, 0],
+                "guven_skoru": 1.0,
+                "image_path": meta.get("image_path"),
+                "gercek_durum": meta.get("gercek_durum", "sağlam"),
+            }]
         total_detections += writer.write_detections(detections)
         time.sleep(FRAME_INTERVAL_S)
 
@@ -189,13 +200,29 @@ if __name__ == "__main__":
         # GUI ana thread'de çalışmalı — pipeline ayrı thread'de başlatılır
         from modules.gui import run_gui  # pylint: disable=import-outside-toplevel
 
+        def run_thread(scenario):
+            # Yeniden başlatmada önceki çıktıları temizle
+            fault_file = OUTPUTS_DIR / "ariza_verileri.json"
+            schedule_file = OUTPUTS_DIR / "gorev_cizelgesi.json"
+            if fault_file.exists():
+                try:
+                    fault_file.unlink()
+                except Exception:
+                    pass
+            if schedule_file.exists():
+                try:
+                    schedule_file.unlink()
+                except Exception:
+                    pass
+            run_pipeline(args.model, scenario, no_gui=True)
+
         pipeline_thread = threading.Thread(
-            target=run_pipeline,
-            args=(args.model, args.scenario, True),  # GUI ana thread'de
+            target=run_thread,
+            args=(args.scenario,),
             name="PipelineThread",
             daemon=True,
         )
         pipeline_thread.start()
-        run_gui()
+        run_gui(run_pipeline_callback=run_thread, initial_scenario=args.scenario)
     else:
         run_pipeline(args.model, args.scenario, no_gui=True)

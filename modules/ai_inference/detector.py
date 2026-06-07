@@ -200,6 +200,8 @@ class GESFaultDetector:
                         "hasar": fault_name,
                         "koordinat": koordinat,
                         "guven_skoru": round(float(box.conf.item()), 4),
+                        "image_path": metadata.get("image_path"),
+                        "gercek_durum": metadata.get("gercek_durum", "sağlam"),
                     }
                 )
 

@@ -1,6 +1,6 @@
 [
   {
-    "timestamp": "2026-05-07T18:56:59+00:00",
+    "timestamp": "2026-06-07T10:46:32+00:00",
     "panel_id": 0,
     "gps": [
       38.42,
@@ -8,15 +8,95 @@
     ],
     "hasar": "hotspot",
     "koordinat": [
-      100,
-      100,
-      80,
-      60
+      543,
+      83,
+      49,
+      54
     ],
-    "guven_skoru": 0.85
+    "guven_skoru": 0.8569
   },
   {
-    "timestamp": "2026-05-07T18:56:59+00:00",
+    "timestamp": "2026-06-07T10:46:32+00:00",
+    "panel_id": 0,
+    "gps": [
+      38.42,
+      27.14
+    ],
+    "hasar": "hotspot",
+    "koordinat": [
+      360,
+      588,
+      51,
+      46
+    ],
+    "guven_skoru": 0.8268
+  },
+  {
+    "timestamp": "2026-06-07T10:46:32+00:00",
+    "panel_id": 0,
+    "gps": [
+      38.42,
+      27.14
+    ],
+    "hasar": "hotspot",
+    "koordinat": [
+      377,
+      216,
+      50,
+      54
+    ],
+    "guven_skoru": 0.7894
+  },
+  {
+    "timestamp": "2026-06-07T10:46:32+00:00",
+    "panel_id": 0,
+    "gps": [
+      38.42,
+      27.14
+    ],
+    "hasar": "hotspot",
+    "koordinat": [
+      425,
+      359,
+      51,
+      52
+    ],
+    "guven_skoru": 0.7785
+  },
+  {
+    "timestamp": "2026-06-07T10:46:32+00:00",
+    "panel_id": 0,
+    "gps": [
+      38.42,
+      27.14
+    ],
+    "hasar": "hotspot",
+    "koordinat": [
+      419,
+      502,
+      51,
+      50
+    ],
+    "guven_skoru": 0.7609
+  },
+  {
+    "timestamp": "2026-06-07T10:46:32+00:00",
+    "panel_id": 0,
+    "gps": [
+      38.42,
+      27.14
+    ],
+    "hasar": "hotspot",
+    "koordinat": [
+      12,
+      355,
+      24,
+      53
+    ],
+    "guven_skoru": 0.7408
+  },
+  {
+    "timestamp": "2026-06-07T10:46:33+00:00",
     "panel_id": 29,
     "gps": [
       38.4188,
@@ -24,11 +104,11 @@
     ],
     "hasar": "hotspot",
     "koordinat": [
-      100,
-      100,
-      80,
-      60
+      174,
+      590,
+      105,
+      71
     ],
-    "guven_skoru": 0.85
+    "guven_skoru": 0.7373
   }
 ]

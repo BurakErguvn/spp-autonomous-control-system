@@ -118,6 +118,8 @@ class DataFeeder:
             if frame is None:
                 continue
             meta = self._build_meta(panel_id, scenario_name=scen.name)
+            meta["image_path"] = str(img_path)
+            meta["gercek_durum"] = {0: "hotspot", 1: "mikro_catlak", 2: "tozlanma"}.get(scen.target_class, "sağlam")
             yield frame, meta
 
     def _iter_full_run(self) -> Iterator[tuple[np.ndarray, dict[str, Any]]]:
@@ -132,6 +134,17 @@ class DataFeeder:
             if frame is None:
                 continue
             meta = self._build_meta(int(panel["panel_id"]), scenario_name=None)
+            meta["image_path"] = str(img_path)
+            
+            # Label dosyasını okuyarak gerçek durumunu belirle
+            label_file = self.dataset_dir / "labels" / (img_path.stem + ".txt")
+            classes = self._classes_in_label(label_file)
+            if classes:
+                sorted_classes = sorted(list(classes))
+                meta["gercek_durum"] = {0: "hotspot", 1: "mikro_catlak", 2: "tozlanma"}.get(sorted_classes[0], "sağlam")
+            else:
+                meta["gercek_durum"] = "sağlam"
+            
             yield frame, meta
 
     # ──────────────────────────────────────────────────────────────────────────

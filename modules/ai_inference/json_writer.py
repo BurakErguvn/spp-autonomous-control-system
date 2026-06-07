@@ -47,7 +47,7 @@ DETECTION_JSON_SCHEMA: dict = {
         },
         "hasar": {
             "type": "string",
-            "enum": ["hotspot", "mikro_catlak", "tozlanma"],
+            "enum": ["hotspot", "mikro_catlak", "tozlanma", "sağlam"],
         },
         "koordinat": {
             "type": "array",
@@ -60,6 +60,15 @@ DETECTION_JSON_SCHEMA: dict = {
             "type": "number",
             "minimum": 0.0,
             "maximum": 1.0,
+        },
+        "image_path": {
+            "type": ["string", "null"],
+            "description": "Görüntü dosya yolu",
+        },
+        "gercek_durum": {
+            "type": "string",
+            "enum": ["hotspot", "mikro_catlak", "tozlanma", "sağlam"],
+            "description": "Gerçek hasar durumu",
         },
     },
     "additionalProperties": False,

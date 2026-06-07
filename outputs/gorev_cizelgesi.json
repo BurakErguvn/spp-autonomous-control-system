@@ -1,35 +1,106 @@
 {
-  "generated_at": "2026-05-07T19:06:39+00:00",
-  "total_cost_tl": 3141.12,
-  "total_distance_km": 0.374,
-  "total_service_time_min": 90,
+  "generated_at": "2026-06-07T11:50:41+00:00",
+  "total_cost_tl": 14581.27,
+  "total_distance_km": 0.424,
+  "total_service_time_min": 540,
   "team_count": 3,
   "tasks": [
     {
       "panel_id": 0,
-      "hasar": "hotspot",
-      "priority": "kritik",
-      "estimated_cost": 1570.0,
-      "service_min": 45,
-      "team_id": 3,
-      "scheduled_date": "2026-05-08"
+      "hasar": "mikro_catlak",
+      "priority": "orta",
+      "estimated_cost": 1620.0,
+      "service_min": 60,
+      "team_id": 1,
+      "scheduled_date": "2026-06-08"
     },
     {
-      "panel_id": 29,
-      "hasar": "hotspot",
-      "priority": "kritik",
-      "estimated_cost": 1570.0,
-      "service_min": 45,
-      "team_id": 3,
-      "scheduled_date": "2026-05-08"
+      "panel_id": 3,
+      "hasar": "mikro_catlak",
+      "priority": "orta",
+      "estimated_cost": 1620.0,
+      "service_min": 60,
+      "team_id": 2,
+      "scheduled_date": "2026-06-08"
+    },
+    {
+      "panel_id": 6,
+      "hasar": "mikro_catlak",
+      "priority": "orta",
+      "estimated_cost": 1620.0,
+      "service_min": 60,
+      "team_id": 2,
+      "scheduled_date": "2026-06-08"
+    },
+    {
+      "panel_id": 9,
+      "hasar": "mikro_catlak",
+      "priority": "orta",
+      "estimated_cost": 1620.0,
+      "service_min": 60,
+      "team_id": 2,
+      "scheduled_date": "2026-06-08"
+    },
+    {
+      "panel_id": 12,
+      "hasar": "mikro_catlak",
+      "priority": "orta",
+      "estimated_cost": 1620.0,
+      "service_min": 60,
+      "team_id": 2,
+      "scheduled_date": "2026-06-08"
+    },
+    {
+      "panel_id": 15,
+      "hasar": "mikro_catlak",
+      "priority": "orta",
+      "estimated_cost": 1620.0,
+      "service_min": 60,
+      "team_id": 2,
+      "scheduled_date": "2026-06-08"
+    },
+    {
+      "panel_id": 21,
+      "hasar": "mikro_catlak",
+      "priority": "orta",
+      "estimated_cost": 1620.0,
+      "service_min": 60,
+      "team_id": 2,
+      "scheduled_date": "2026-06-08"
+    },
+    {
+      "panel_id": 24,
+      "hasar": "mikro_catlak",
+      "priority": "orta",
+      "estimated_cost": 1620.0,
+      "service_min": 60,
+      "team_id": 2,
+      "scheduled_date": "2026-06-08"
+    },
+    {
+      "panel_id": 27,
+      "hasar": "mikro_catlak",
+      "priority": "orta",
+      "estimated_cost": 1620.0,
+      "service_min": 60,
+      "team_id": 2,
+      "scheduled_date": "2026-06-08"
     }
   ],
   "routes": {
-    "1": [],
-    "2": [],
-    "3": [
-      29,
+    "1": [
       0
-    ]
+    ],
+    "2": [
+      3,
+      9,
+      15,
+      21,
+      27,
+      24,
+      12,
+      6
+    ],
+    "3": []
   }
 }

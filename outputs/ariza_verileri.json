@@ -1,114 +1,380 @@
 [
   {
-    "timestamp": "2026-05-07T19:06:33+00:00",
+    "timestamp": "2026-06-07T11:50:35+00:00",
     "panel_id": 0,
     "gps": [
       38.42,
       27.14
     ],
-    "hasar": "hotspot",
+    "hasar": "mikro_catlak",
     "koordinat": [
-      543,
-      83,
-      49,
+      319,
+      320,
+      638,
+      639
+    ],
+    "guven_skoru": 0.6789,
+    "image_path": "data/SOLAR PANEL DET.v1i.yolo26/test/images/Physical_Damge_316_jpg.rf.5fdd3cc2f41b05f1b2460fe3ccae0cef.jpg",
+    "gercek_durum": "mikro_catlak"
+  },
+  {
+    "timestamp": "2026-06-07T11:50:36+00:00",
+    "panel_id": 3,
+    "gps": [
+      38.42,
+      27.1409
+    ],
+    "hasar": "mikro_catlak",
+    "koordinat": [
+      320,
+      369,
+      640,
+      541
+    ],
+    "guven_skoru": 0.7944,
+    "image_path": "data/SOLAR PANEL DET.v1i.yolo26/test/images/Physical_Damge_296_jpg.rf.f452260d919dd7652ca042e88aaecce8.jpg",
+    "gercek_durum": "mikro_catlak"
+  },
+  {
+    "timestamp": "2026-06-07T11:50:36+00:00",
+    "panel_id": 6,
+    "gps": [
+      38.4197,
+      27.14
+    ],
+    "hasar": "mikro_catlak",
+    "koordinat": [
+      320,
+      290,
+      598,
+      432
+    ],
+    "guven_skoru": 0.7295,
+    "image_path": "data/SOLAR PANEL DET.v1i.yolo26/test/images/Physical_Damge_269_jpg.rf.78ddf56024393fe254b70fe4787946be.jpg",
+    "gercek_durum": "mikro_catlak"
+  },
+  {
+    "timestamp": "2026-06-07T11:50:37+00:00",
+    "panel_id": 9,
+    "gps": [
+      38.4197,
+      27.1409
+    ],
+    "hasar": "mikro_catlak",
+    "koordinat": [
+      320,
+      320,
+      639,
+      640
+    ],
+    "guven_skoru": 0.8941,
+    "image_path": "data/SOLAR PANEL DET.v1i.yolo26/test/images/Physical_Damge_138_jpg.rf.d03e454d1302b9ee702168fbe84abaeb.jpg",
+    "gercek_durum": "mikro_catlak"
+  },
+  {
+    "timestamp": "2026-06-07T11:50:37+00:00",
+    "panel_id": 12,
+    "gps": [
+      38.4194,
+      27.14
+    ],
+    "hasar": "mikro_catlak",
+    "koordinat": [
+      319,
+      386,
+      639,
+      506
+    ],
+    "guven_skoru": 0.6765,
+    "image_path": "data/SOLAR PANEL DET.v1i.yolo26/test/images/Electrical_Damge_107_jpg.rf.63ef588b2f06ae48ff07afd7e75f4f1e.jpg",
+    "gercek_durum": "mikro_catlak"
+  },
+  {
+    "timestamp": "2026-06-07T11:50:38+00:00",
+    "panel_id": 15,
+    "gps": [
+      38.4194,
+      27.1409
+    ],
+    "hasar": "mikro_catlak",
+    "koordinat": [
+      74,
+      378,
+      149,
+      85
+    ],
+    "guven_skoru": 0.9191,
+    "image_path": "data/SOLAR PANEL DET.v1i.yolo26/test/images/Snow_13_jpg.rf.3b730c5b80ae835e7eed2398c9fb66b3.jpg",
+    "gercek_durum": "mikro_catlak"
+  },
+  {
+    "timestamp": "2026-06-07T11:50:38+00:00",
+    "panel_id": 15,
+    "gps": [
+      38.4194,
+      27.1409
+    ],
+    "hasar": "mikro_catlak",
+    "koordinat": [
+      191,
+      418,
+      238,
+      126
+    ],
+    "guven_skoru": 0.9159,
+    "image_path": "data/SOLAR PANEL DET.v1i.yolo26/test/images/Snow_13_jpg.rf.3b730c5b80ae835e7eed2398c9fb66b3.jpg",
+    "gercek_durum": "mikro_catlak"
+  },
+  {
+    "timestamp": "2026-06-07T11:50:38+00:00",
+    "panel_id": 15,
+    "gps": [
+      38.4194,
+      27.1409
+    ],
+    "hasar": "mikro_catlak",
+    "koordinat": [
+      261,
+      346,
+      207,
+      67
+    ],
+    "guven_skoru": 0.8863,
+    "image_path": "data/SOLAR PANEL DET.v1i.yolo26/test/images/Snow_13_jpg.rf.3b730c5b80ae835e7eed2398c9fb66b3.jpg",
+    "gercek_durum": "mikro_catlak"
+  },
+  {
+    "timestamp": "2026-06-07T11:50:38+00:00",
+    "panel_id": 15,
+    "gps": [
+      38.4194,
+      27.1409
+    ],
+    "hasar": "mikro_catlak",
+    "koordinat": [
+      127,
+      325,
+      162,
+      55
+    ],
+    "guven_skoru": 0.8476,
+    "image_path": "data/SOLAR PANEL DET.v1i.yolo26/test/images/Snow_13_jpg.rf.3b730c5b80ae835e7eed2398c9fb66b3.jpg",
+    "gercek_durum": "mikro_catlak"
+  },
+  {
+    "timestamp": "2026-06-07T11:50:38+00:00",
+    "panel_id": 15,
+    "gps": [
+      38.4194,
+      27.1409
+    ],
+    "hasar": "tozlanma",
+    "koordinat": [
+      112,
+      429,
+      78,
+      38
+    ],
+    "guven_skoru": 0.7643,
+    "image_path": "data/SOLAR PANEL DET.v1i.yolo26/test/images/Snow_13_jpg.rf.3b730c5b80ae835e7eed2398c9fb66b3.jpg",
+    "gercek_durum": "mikro_catlak"
+  },
+  {
+    "timestamp": "2026-06-07T11:50:38+00:00",
+    "panel_id": 15,
+    "gps": [
+      38.4194,
+      27.1409
+    ],
+    "hasar": "mikro_catlak",
+    "koordinat": [
+      309,
+      296,
+      194,
+      47
+    ],
+    "guven_skoru": 0.751,
+    "image_path": "data/SOLAR PANEL DET.v1i.yolo26/test/images/Snow_13_jpg.rf.3b730c5b80ae835e7eed2398c9fb66b3.jpg",
+    "gercek_durum": "mikro_catlak"
+  },
+  {
+    "timestamp": "2026-06-07T11:50:38+00:00",
+    "panel_id": 15,
+    "gps": [
+      38.4194,
+      27.1409
+    ],
+    "hasar": "tozlanma",
+    "koordinat": [
+      164,
+      292,
+      107,
+      27
+    ],
+    "guven_skoru": 0.7204,
+    "image_path": "data/SOLAR PANEL DET.v1i.yolo26/test/images/Snow_13_jpg.rf.3b730c5b80ae835e7eed2398c9fb66b3.jpg",
+    "gercek_durum": "mikro_catlak"
+  },
+  {
+    "timestamp": "2026-06-07T11:50:38+00:00",
+    "panel_id": 15,
+    "gps": [
+      38.4194,
+      27.1409
+    ],
+    "hasar": "mikro_catlak",
+    "koordinat": [
+      178,
+      288,
+      140,
+      35
+    ],
+    "guven_skoru": 0.6926,
+    "image_path": "data/SOLAR PANEL DET.v1i.yolo26/test/images/Snow_13_jpg.rf.3b730c5b80ae835e7eed2398c9fb66b3.jpg",
+    "gercek_durum": "mikro_catlak"
+  },
+  {
+    "timestamp": "2026-06-07T11:50:38+00:00",
+    "panel_id": 15,
+    "gps": [
+      38.4194,
+      27.1409
+    ],
+    "hasar": "mikro_catlak",
+    "koordinat": [
+      93,
+      280,
+      109,
+      36
+    ],
+    "guven_skoru": 0.6696,
+    "image_path": "data/SOLAR PANEL DET.v1i.yolo26/test/images/Snow_13_jpg.rf.3b730c5b80ae835e7eed2398c9fb66b3.jpg",
+    "gercek_durum": "mikro_catlak"
+  },
+  {
+    "timestamp": "2026-06-07T11:50:38+00:00",
+    "panel_id": 15,
+    "gps": [
+      38.4194,
+      27.1409
+    ],
+    "hasar": "mikro_catlak",
+    "koordinat": [
+      52,
+      308,
+      105,
+      48
+    ],
+    "guven_skoru": 0.6315,
+    "image_path": "data/SOLAR PANEL DET.v1i.yolo26/test/images/Snow_13_jpg.rf.3b730c5b80ae835e7eed2398c9fb66b3.jpg",
+    "gercek_durum": "mikro_catlak"
+  },
+  {
+    "timestamp": "2026-06-07T11:50:38+00:00",
+    "panel_id": 15,
+    "gps": [
+      38.4194,
+      27.1409
+    ],
+    "hasar": "mikro_catlak",
+    "koordinat": [
+      478,
+      306,
+      223,
       54
     ],
-    "guven_skoru": 0.8569
+    "guven_skoru": 0.6088,
+    "image_path": "data/SOLAR PANEL DET.v1i.yolo26/test/images/Snow_13_jpg.rf.3b730c5b80ae835e7eed2398c9fb66b3.jpg",
+    "gercek_durum": "mikro_catlak"
   },
   {
-    "timestamp": "2026-05-07T19:06:33+00:00",
-    "panel_id": 0,
+    "timestamp": "2026-06-07T11:50:38+00:00",
+    "panel_id": 15,
     "gps": [
-      38.42,
-      27.14
+      38.4194,
+      27.1409
     ],
-    "hasar": "hotspot",
+    "hasar": "mikro_catlak",
     "koordinat": [
-      360,
-      588,
-      51,
-      46
-    ],
-    "guven_skoru": 0.8268
-  },
-  {
-    "timestamp": "2026-05-07T19:06:33+00:00",
-    "panel_id": 0,
-    "gps": [
-      38.42,
-      27.14
-    ],
-    "hasar": "hotspot",
-    "koordinat": [
-      377,
-      216,
-      50,
-      54
-    ],
-    "guven_skoru": 0.7894
-  },
-  {
-    "timestamp": "2026-05-07T19:06:33+00:00",
-    "panel_id": 0,
-    "gps": [
-      38.42,
-      27.14
-    ],
-    "hasar": "hotspot",
-    "koordinat": [
-      425,
+      19,
       359,
-      51,
-      52
+      38,
+      80
     ],
-    "guven_skoru": 0.7785
+    "guven_skoru": 0.567,
+    "image_path": "data/SOLAR PANEL DET.v1i.yolo26/test/images/Snow_13_jpg.rf.3b730c5b80ae835e7eed2398c9fb66b3.jpg",
+    "gercek_durum": "mikro_catlak"
   },
   {
-    "timestamp": "2026-05-07T19:06:33+00:00",
-    "panel_id": 0,
+    "timestamp": "2026-06-07T11:50:38+00:00",
+    "panel_id": 18,
     "gps": [
-      38.42,
+      38.4191,
       27.14
     ],
-    "hasar": "hotspot",
+    "hasar": "sağlam",
     "koordinat": [
-      419,
-      502,
-      51,
-      50
+      0,
+      0,
+      0,
+      0
     ],
-    "guven_skoru": 0.7609
+    "guven_skoru": 1.0,
+    "image_path": "data/SOLAR PANEL DET.v1i.yolo26/test/images/Physical_Damge_348_jpg.rf.0c7f14ee901d3d565b87972daaca8795.jpg",
+    "gercek_durum": "mikro_catlak"
   },
   {
-    "timestamp": "2026-05-07T19:06:33+00:00",
-    "panel_id": 0,
+    "timestamp": "2026-06-07T11:50:39+00:00",
+    "panel_id": 21,
     "gps": [
-      38.42,
-      27.14
+      38.4191,
+      27.1409
     ],
-    "hasar": "hotspot",
+    "hasar": "mikro_catlak",
     "koordinat": [
-      12,
-      355,
-      24,
-      53
+      320,
+      319,
+      639,
+      639
     ],
-    "guven_skoru": 0.7408
+    "guven_skoru": 0.9155,
+    "image_path": "data/SOLAR PANEL DET.v1i.yolo26/test/images/Physical_Damge_118_jpg.rf.49a0c51a07a4483ef074320b413aadd9.jpg",
+    "gercek_durum": "mikro_catlak"
   },
   {
-    "timestamp": "2026-05-07T19:06:39+00:00",
-    "panel_id": 29,
+    "timestamp": "2026-06-07T11:50:39+00:00",
+    "panel_id": 24,
     "gps": [
       38.4188,
-      27.1415
+      27.14
     ],
-    "hasar": "hotspot",
+    "hasar": "mikro_catlak",
     "koordinat": [
-      174,
-      590,
-      105,
-      71
+      315,
+      321,
+      391,
+      487
     ],
-    "guven_skoru": 0.7373
+    "guven_skoru": 0.7643,
+    "image_path": "data/SOLAR PANEL DET.v1i.yolo26/test/images/Physical_Damge_401_jpg.rf.5b0a0bc155ed784f20b0a88956b6fde9.jpg",
+    "gercek_durum": "mikro_catlak"
+  },
+  {
+    "timestamp": "2026-06-07T11:50:40+00:00",
+    "panel_id": 27,
+    "gps": [
+      38.4188,
+      27.1409
+    ],
+    "hasar": "mikro_catlak",
+    "koordinat": [
+      296,
+      277,
+      461,
+      555
+    ],
+    "guven_skoru": 0.7722,
+    "image_path": "data/SOLAR PANEL DET.v1i.yolo26/test/images/Physical_Damge_213_jpg.rf.68c9704a20f6445f0ed030f1c7feb394.jpg",
+    "gercek_durum": "mikro_catlak"
   }
 ]

@@ -96,9 +96,9 @@ class JsonWatcher(QThread):
         if mtime <= self._last_fault_mtime:
             return
 
-        self._last_fault_mtime = mtime
         data = self._safe_load_json(FAULT_FILE)
         if data is not None:
+            self._last_fault_mtime = mtime
             detections = data if isinstance(data, list) else []
             self.fault_detected.emit(detections)
             logger.debug("fault_detected sinyali yayıldı: %d tespit", len(detections))
@@ -112,9 +112,9 @@ class JsonWatcher(QThread):
         if mtime <= self._last_schedule_mtime:
             return
 
-        self._last_schedule_mtime = mtime
         data = self._safe_load_json(SCHEDULE_FILE)
         if data is not None and isinstance(data, dict):
+            self._last_schedule_mtime = mtime
             self.schedule_updated.emit(data)
             logger.debug("schedule_updated sinyali yayıldı.")
 

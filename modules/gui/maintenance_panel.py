@@ -46,8 +46,8 @@ PRIORITY_COLORS: dict[str, str] = {
     "düşük": "#388E3C",
 }
 
-# Ekip bazlı renk paleti (3 ekip için)
-TEAM_COLORS: list[str] = ["#80CBC4", "#FFAB91", "#90CAF9"]
+# Ekip bazlı renk paleti (3 ekip için - Harita neon renkleriyle eşlenik)
+TEAM_COLORS: list[str] = ["#00E5FF", "#FF007F", "#FFD600"]
 
 
 class MaintenancePanel(QWidget):
@@ -246,6 +246,17 @@ class MaintenancePanel(QWidget):
                     font = item.font()
                     font.setBold(True)
                     item.setFont(font)
+
+                # Ekip sütununu harita rota renkleriyle renklendir
+                elif col == 3:
+                    team_id_str = str(task.get("team_id", ""))
+                    if team_id_str in ["1", "2", "3"]:
+                        team_idx = int(team_id_str) - 1
+                        color_hex = TEAM_COLORS[team_idx % len(TEAM_COLORS)]
+                        item.setForeground(QColor(color_hex))
+                        font = item.font()
+                        font.setBold(True)
+                        item.setFont(font)
 
                 self._table.setItem(row, col, item)
 

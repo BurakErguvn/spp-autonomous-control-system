@@ -1,22 +1,22 @@
 [
   {
-    "timestamp": "2026-05-07T18:56:59+00:00",
+    "timestamp": "2026-06-07T10:46:29+00:00",
     "panel_id": 5,
     "gps": [
       38.42,
       27.1415
     ],
-    "hasar": "tozlanma",
+    "hasar": "mikro_catlak",
     "koordinat": [
-      100,
-      100,
-      80,
-      60
+      320,
+      320,
+      640,
+      639
     ],
-    "guven_skoru": 0.85
+    "guven_skoru": 0.9751
   },
   {
-    "timestamp": "2026-05-07T18:56:59+00:00",
+    "timestamp": "2026-06-07T10:46:32+00:00",
     "panel_id": 14,
     "gps": [
       38.4194,
@@ -24,11 +24,11 @@
     ],
     "hasar": "tozlanma",
     "koordinat": [
-      100,
-      100,
-      80,
-      60
+      316,
+      296,
+      631,
+      584
     ],
-    "guven_skoru": 0.85
+    "guven_skoru": 0.7416
   }
 ]
