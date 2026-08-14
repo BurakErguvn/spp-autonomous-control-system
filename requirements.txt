@@ -14,6 +14,7 @@ watchdog>=3.0.0             # outputs/ klasörü dosya izleyici
 # ─── Optimizasyon (IE modülü bağımlılıkları — entegrasyon için) ─────────────
 PuLP>=2.7.0
 scipy>=1.11.0
+ortools>=9.8.0              # CVRP: PATH_CHEAPEST_ARC + Guided Local Search
 
 # ─── Veri & Raporlama ───────────────────────────────────────────────────────
 pandas>=2.0.0

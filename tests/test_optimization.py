@@ -189,7 +189,7 @@ class TestMilpSelection:
 
 
 class TestCvrpAssignment:
-    """CVRP rotalama: 3 ekip, kapasite kısıtı, MTZ subtour eliminasyonu."""
+    """CVRP rotalama: 3 ekip, kapasite kısıtı, CW+2-opt / ALNS / OR-Tools."""
 
     def test_routes_have_three_teams(self, temp_workspace):
         """Çıktı routes dict'i 3 ekip anahtarı içermeli."""
@@ -281,6 +281,7 @@ class TestScheduleJsonSchema:
             "team_count",
             "tasks",
             "routes",
+            "routing_solver",
         ]:
             assert key in result, f"Eksik anahtar: {key}"
 
@@ -299,3 +300,54 @@ class TestScheduleJsonSchema:
         task = result["tasks"][0]
         for key in ["panel_id", "hasar", "priority", "estimated_cost", "service_min", "team_id"]:
             assert key in task
+        assert result["routing_solver"] in {
+            "clarke_wright_2opt",
+            "alns",
+            "ortools",
+            "nearest_neighbor",
+        }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Rota portföyü (CW / ALNS / OR-Tools)
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class TestRoutingPortfolio:
+    """Clarke–Wright + 2-opt / ALNS / OR-Tools kapsama ve kapasite."""
+
+    def test_clarke_wright_covers_all(self):
+        from modules.optimization.routing import clarke_wright, pack_into_k, two_opt_route
+
+        n = 5
+        dist = [[0.0] * (n + 1) for _ in range(n + 1)]
+        for i in range(n + 1):
+            for j in range(n + 1):
+                dist[i][j] = abs(i - j) * 0.1
+        service = [0, 45, 45, 45, 45, 45]
+        routes = clarke_wright(n, dist, service, capacity=480)
+        covered = {c for r in routes for c in r}
+        assert covered == set(range(1, n + 1))
+        packed = pack_into_k(
+            [two_opt_route(r, dist) for r in routes], 3, service, 480, dist
+        )
+        assert len(packed) == 3
+        assert {c for r in packed for c in r} == set(range(1, n + 1))
+
+    def test_portfolio_respects_capacity(self):
+        from modules.optimization.routing import solve_cvrp_portfolio
+
+        panels = [10, 20, 30, 40, 50]
+        n = len(panels)
+        dist = [[abs(i - j) * 0.25 for j in range(n + 1)] for i in range(n + 1)]
+        service = [0, 60, 60, 60, 60, 60]
+        routes, name = solve_cvrp_portfolio(
+            panels, dist, service, n_vehicles=3, capacity=480, time_limit_s=2
+        )
+        assert name in {"clarke_wright_2opt", "alns", "ortools"}
+        visited = [p for seq in routes.values() for p in seq]
+        assert sorted(visited) == panels
+        for seq in routes.values():
+            load = sum(60 for _ in seq)
+            assert load <= 480
+

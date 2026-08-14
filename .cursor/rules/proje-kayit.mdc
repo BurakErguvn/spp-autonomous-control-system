@@ -1,0 +1,48 @@
+---
+description: Kullanıcı inputlarını, proje değişikliklerini ve matematiği docs/kayit/ altında ayrı dosyalara kaydet
+alwaysApply: true
+---
+
+# Proje kayıt defteri
+
+Her kullanıcı mesajından sonra, işi bitirmeden `docs/kayit/` altına madde ekle. Eski maddeleri silme veya kısaltma; yalnızca sona ekle.
+
+Kullanıcı açıkça kaydı atlamayı isterse (`kayıt tutma`, `bu inputumu yok say`) o turu **hiçbir dosyaya yazma**.
+
+## Dosyalar
+
+| Dosya | Ne yazılır |
+|---|---|
+| `docs/kayit/inputlar.md` | Kullanıcı mesajının tam metni (çok uzunsa ilk 500 karakter + özet). Gizli bilgi/anahtar yazma. |
+| `docs/kayit/degisiklikler.md` | Kod, doküman, veri, yapılandırma: yol + ne değişti. Karar ve gerekçe. Dosya değişmediyse bu dosyaya yazma. |
+| `docs/kayit/matematik.md` | Çıkarım, varsayım, parametre, formül (LaTeX), sayısal sonuç + birim. Matematik yoksa bu dosyaya yazma. |
+
+Üç dosyada aynı başlığı kullan: `## YYYY-MM-DD HH:MM — kısa başlık` (Europe/Istanbul).
+
+## Şablonlar
+
+`inputlar.md`:
+
+```markdown
+## 2026-08-13 14:10 — MILP amaç fonksiyonu
+
+> Amaç fonksiyonuna enerji kaybı cezasını ekle
+```
+
+`degisiklikler.md`:
+
+```markdown
+## 2026-08-13 14:10 — MILP amaç fonksiyonu
+
+- `modules/optimization/model.py`: `energy_loss` terimi eklendi
+- Karar: ceza tespit süresine doğrusal bağlandı
+```
+
+`matematik.md`:
+
+```markdown
+## 2026-08-13 14:10 — MILP amaç fonksiyonu
+
+- $c_i$: arıza $i$ için birim zaman enerji kaybı (kWh)
+- $$Z = \sum_i (c_i t_i + w_i x_i)$$
+```

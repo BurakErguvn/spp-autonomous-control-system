@@ -8,8 +8,8 @@ Bu modül üç aşamada çalışır:
    tamir edilip edilmemesine karar verilir. Hotspot ve mikro_catlak
    güvenlik gereği zorunlu (must_fix); tozlanma TL bazlı kararla
    filtrelenir. Toplam servis süresi 3 ekibin günlük mesaisini aşamaz.
-3. **CVRP Atama:** Seçilen arızalar PuLP ile 3 araca paralel atanır;
-   MTZ subtour eliminasyonu kullanılır. Çıktı `gorev_cizelgesi.json`.
+3. **CVRP Atama:** Clarke–Wright + 2-opt, ALNS ve OR-Tools aynı örnekte
+   koşar; en iyi kapsama/mesafe seçilir. Çıktı `gorev_cizelgesi.json`.
 
 Parametreler IE Araştırma Raporu (dokumanlar/ie_arastirma_rapor.md ve
 Parametre Tablosu.csv) kaynaklıdır.
@@ -24,6 +24,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pulp
+
+from .routing import solve_cvrp_portfolio
 
 logger = logging.getLogger(__name__)
 
@@ -159,6 +161,7 @@ class MaintenanceScheduler:
         self.layout = self._load_layout()
         origin = self.layout.get("origin_gps", [38.4200, 27.1400])
         self.depot_gps: tuple[float, float] = (float(origin[0]), float(origin[1]))
+        self._last_routing_solver: str = "none"
 
     # ──────────────────────────────────────────────────────────────────────────
     # Public API
@@ -321,25 +324,15 @@ class MaintenanceScheduler:
     ) -> dict[int, list[int]]:
         """3 araç paralel rotalama. Returns: {team_id: [panel_id, ...]}.
 
-        Düğümler: 0 = depo, 1..N = seçilen panel arızaları.
-        Karar: y[i,j,k] = araç k arc (i→j) kullanıyorsa 1.
-        Subtour eliminasyonu: MTZ (Miller-Tucker-Zemlin) sıra değişkenleri.
+        Adaylar: Clarke–Wright + 2-opt, ALNS, OR-Tools (varsa).
+        En yüksek kapsama, eşitlikte en kısa mesafe seçilir.
         """
         K = Parameters.TEAM_COUNT
         empty_routes: dict[int, list[int]] = {k: [] for k in range(1, K + 1)}
 
         if not panels:
+            self._last_routing_solver = "empty"
             return empty_routes
-
-        # Büyük problem boyutları için çözücünün donmasını/uzun sürmesini engellemek amacıyla
-        # doğrudan sezgisel fallback (en yakın komşu) rotalamasını kullan
-        if len(panels) > 10:
-            logger.info("Panel sayısı (%d > 10) yüksek. Hızlı sezgisel rotalama kullanılıyor.", len(panels))
-            return self._cvrp_fallback(panels, panel_hasar)
-
-        N = len(panels)
-        nodes = list(range(N + 1))           # 0 = depo
-        customers = list(range(1, N + 1))    # 1..N
 
         locs: list[tuple[float, float]] = [self.depot_gps] + [
             self._panel_gps(p) for p in panels
@@ -348,142 +341,30 @@ class MaintenanceScheduler:
             CostCalculator.service_minutes(panel_hasar[p]) for p in panels
         ]
         dist = self._distance_matrix_km(locs)
+        n = len(panels)
+        ot_limit = 2 if n <= 12 else (8 if n <= 40 else min(30, Parameters.CVRP_TIME_LIMIT_S))
 
-        prob = pulp.LpProblem("CVRP", pulp.LpMinimize)
-
-        y = pulp.LpVariable.dicts(
-            "y",
-            ((i, j, k) for i in nodes for j in nodes if i != j for k in range(1, K + 1)),
-            cat=pulp.LpBinary,
+        routes, name = solve_cvrp_portfolio(
+            panels,
+            dist,
+            service,
+            K,
+            Parameters.DAILY_SHIFT_MIN,
+            time_limit_s=ot_limit,
         )
-        u = pulp.LpVariable.dicts(
-            "u",
-            ((i, k) for i in customers for k in range(1, K + 1)),
-            lowBound=1,
-            upBound=N,
-            cat=pulp.LpInteger,
-        )
-
-        # Amaç: toplam yakıt maliyeti (TL)
-        prob += pulp.lpSum(
-            dist[i][j] * Parameters.FUEL_TL_PER_KM * y[(i, j, k)]
-            for i in nodes
-            for j in nodes
-            if i != j
-            for k in range(1, K + 1)
-        )
-
-        # Her müşteri tam olarak bir kez ziyaret edilir (giriş + çıkış 1)
-        for i in customers:
-            prob += (
-                pulp.lpSum(y[(j, i, k)] for j in nodes if j != i for k in range(1, K + 1))
-                == 1,
-                f"in_once_{i}",
+        covered = {pid for seq in routes.values() for pid in seq}
+        missing = set(panels) - covered
+        if missing:
+            logger.warning(
+                "Rota portföyü %d paneli kaçırdı (%s) — NN fallback.",
+                len(missing),
+                name,
             )
-            prob += (
-                pulp.lpSum(y[(i, j, k)] for j in nodes if j != i for k in range(1, K + 1))
-                == 1,
-                f"out_once_{i}",
-            )
-
-        # Her araç depodan en fazla bir kez ayrılır ve döner
-        for k in range(1, K + 1):
-            prob += (
-                pulp.lpSum(y[(0, j, k)] for j in customers) <= 1,
-                f"depot_out_{k}",
-            )
-            prob += (
-                pulp.lpSum(y[(j, 0, k)] for j in customers) <= 1,
-                f"depot_in_{k}",
-            )
-            # Akış denkliği — aracın ayrıldığı sayı = döndüğü sayı
-            prob += (
-                pulp.lpSum(y[(0, j, k)] for j in customers)
-                == pulp.lpSum(y[(j, 0, k)] for j in customers),
-                f"depot_balance_{k}",
-            )
-
-        # Müşteride akış korunumu (her araç için)
-        for k in range(1, K + 1):
-            for h in customers:
-                prob += (
-                    pulp.lpSum(y[(i, h, k)] for i in nodes if i != h)
-                    == pulp.lpSum(y[(h, j, k)] for j in nodes if j != h),
-                    f"flow_{h}_{k}",
-                )
-
-        # Kapasite: araç başına servis süresi günlük mesayı aşmaz
-        for k in range(1, K + 1):
-            prob += (
-                pulp.lpSum(
-                    service[i] * y[(i, j, k)]
-                    for i in customers
-                    for j in nodes
-                    if j != i
-                )
-                <= Parameters.DAILY_SHIFT_MIN,
-                f"shift_capacity_{k}",
-            )
-
-        # MTZ subtour eliminasyonu
-        for k in range(1, K + 1):
-            for i in customers:
-                for j in customers:
-                    if i != j:
-                        prob += (
-                            u[(i, k)] - u[(j, k)] + N * y[(i, j, k)] <= N - 1,
-                            f"mtz_{i}_{j}_{k}",
-                        )
-
-        try:
-            solver = pulp.PULP_CBC_CMD(
-                msg=False, timeLimit=Parameters.CVRP_TIME_LIMIT_S
-            )
-            prob.solve(solver)
-            status = pulp.LpStatus[prob.status]
-        except Exception as exc:
-            logger.warning("CVRP çözücü çalıştırılamadı (%s) — sezgisel fallback'e geçiliyor.", exc)
-            return self._cvrp_fallback(panels, panel_hasar)
-
-        if status not in {"Optimal", "Not Solved"}:
-            logger.warning("CVRP çözüm durumu: %s — sezgisel fallback'e geçiliyor.", status)
-            return self._cvrp_fallback(panels, panel_hasar)
-
-        # En azından bir çözüm mevcut mu?
-        if any(pulp.value(y[k]) is None for k in y):
-            logger.warning("CVRP eksik çözüm — fallback uygulanıyor.")
-            return self._cvrp_fallback(panels, panel_hasar)
-
-        # Rotaları çıkar
-        routes: dict[int, list[int]] = {}
-        for k in range(1, K + 1):
-            routes[k] = self._extract_route(y, k, panels, nodes)
-
+            routes = self._cvrp_fallback(panels, panel_hasar)
+            name = "nearest_neighbor"
+        self._last_routing_solver = name
+        logger.info("Seçilen rota çözücü: %s", name)
         return routes
-
-    @staticmethod
-    def _extract_route(
-        y, k: int, panels: list[int], nodes: list[int]
-    ) -> list[int]:
-        """y değişkenlerinden k. aracın depodan başlayan rotasını panel_id listesine çevirir."""
-        route: list[int] = []
-        current = 0  # depo
-        max_steps = len(nodes)
-
-        for _ in range(max_steps):
-            next_node = None
-            for j in nodes:
-                if j == current:
-                    continue
-                val = pulp.value(y.get((current, j, k)))
-                if val is not None and val > 0.5:
-                    next_node = j
-                    break
-            if next_node is None or next_node == 0:
-                break
-            route.append(panels[next_node - 1])
-            current = next_node
-        return route
 
     def _cvrp_fallback(
         self, panels: list[int], panel_hasar: dict[int, str]
@@ -585,6 +466,7 @@ class MaintenanceScheduler:
             "team_count": Parameters.TEAM_COUNT,
             "tasks": tasks,
             "routes": {str(k): v for k, v in routes.items()},
+            "routing_solver": self._last_routing_solver,
         }
 
     def _empty_schedule(self, reason: str) -> dict:

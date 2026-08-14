@@ -6,6 +6,7 @@ eğitilmiş ağırlıkları yükler (inference only).
 Kullanım:
     python scripts/train_yolo26.py
     python scripts/train_yolo26.py --epochs 100 --batch 16 --device cuda:0
+    python scripts/train_yolo26.py --size m --batch -1 --device cuda:0
 
 Çıktı:
     models/best.pt  — en iyi doğrulama mAP'ine sahip ağırlık
@@ -31,6 +32,13 @@ logger = logging.getLogger("train")
 DATA_YAML = Path("data") / "ges_project.yaml"
 MODELS_DIR = Path("models")
 REPORTS_DIR = Path("outputs") / "reports"
+SIZE_TO_WEIGHTS: dict[str, str] = {
+    "n": "yolo26n.pt",
+    "s": "yolo26s.pt",
+    "m": "yolo26m.pt",
+    "l": "yolo26l.pt",
+    "x": "yolo26x.pt",
+}
 
 # Sınıf eşleştirme tablosu: orijinal veri seti ID → proje sınıf ID
 # Orijinal: 15 sınıf | Proje: 3 sınıf
@@ -105,14 +113,15 @@ def remap_labels(dataset_dir: Path) -> None:
         )
 
 
-def train(epochs: int, batch: int, device: str, imgsz: int) -> None:
+def train(epochs: int, batch: int, device: str, imgsz: int, size: str = "s") -> None:
     """YOLO26 modelini eğitir ve ağırlıkları models/ dizinine kaydeder.
 
     Args:
         epochs: Eğitim dönem sayısı.
-        batch: Mini-batch boyutu.
+        batch: Mini-batch boyutu. ``-1`` = GPU belleğinin ~%60'ı (AutoBatch).
         device: Hesaplama cihazı ('cuda:0', 'cuda', 'cpu').
         imgsz: Giriş görüntü boyutu (piksel).
+        size: Mimari boyutu (n/s/m/l/x). Resmi varsayılan: s.
     """
     try:
         from ultralytics import YOLO  # pylint: disable=import-outside-toplevel
@@ -133,11 +142,13 @@ def train(epochs: int, batch: int, device: str, imgsz: int) -> None:
     remap_labels(dataset_dir)
 
     logger.info(
-        "Eğitim başlatılıyor: epochs=%d, batch=%d, device=%s, imgsz=%d",
-        epochs, batch, device, imgsz,
+        "Eğitim başlatılıyor: size=yolo26%s epochs=%d, batch=%d, device=%s, imgsz=%d",
+        size, epochs, batch, device, imgsz,
     )
 
-    model = YOLO("yolo26s.pt")  # Proje zorunluluğu: YOLO26 mimarisi kullanılmalı
+    weights = SIZE_TO_WEIGHTS[size]
+    logger.info("Başlangıç ağırlığı: %s (size=%s)", weights, size)
+    model = YOLO(weights)  # Proje zorunluluğu: YOLO26 ailesi
 
     results = model.train(
         data=str(DATA_YAML),
@@ -179,6 +190,7 @@ def train(epochs: int, batch: int, device: str, imgsz: int) -> None:
         "recall": float(results.results_dict.get("metrics/recall(B)", 0)),
         "epochs": epochs,
         "best_model": str(best_dst),
+        "architecture": f"yolo26{size}",
     }
     metrics_path = REPORTS_DIR / "train_metrics.json"
     with open(metrics_path, "w", encoding="utf-8") as f:
@@ -201,12 +213,18 @@ def parse_args() -> argparse.Namespace:
     """Komut satırı argümanlarını ayrıştırır."""
     parser = argparse.ArgumentParser(description="YOLO26 GES Model Eğitimi")
     parser.add_argument("--epochs", type=int, default=70, help="Epoch sayısı")
-    parser.add_argument("--batch", type=int, default=16, help="Batch boyutu")
+    parser.add_argument("--batch", type=int, default=16, help="Batch boyutu (-1 = AutoBatch)")
     parser.add_argument("--device", type=str, default="cuda", help="Hesaplama cihazı")
     parser.add_argument("--imgsz", type=int, default=640, help="Görüntü boyutu")
+    parser.add_argument(
+        "--size",
+        choices=list(SIZE_TO_WEIGHTS),
+        default="s",
+        help="YOLO26 boyutu (resmi: s; Colab T4 önerisi: m)",
+    )
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
-    train(args.epochs, args.batch, args.device, args.imgsz)
+    train(args.epochs, args.batch, args.device, args.imgsz, args.size)
