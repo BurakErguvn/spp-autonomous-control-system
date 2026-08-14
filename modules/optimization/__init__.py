@@ -1,4 +1,4 @@
-"""IE Optimizasyon Modülü — MILP seçim + CW/ALNS/OR-Tools CVRP.
+"""IE Optimizasyon Modülü — MILP seçim + ALNS CVRP.
 
 Dışa açılan bileşenler:
     MaintenanceScheduler : MILP + CVRP çözücü orkestratörü

@@ -34,3 +34,13 @@ Kod, doküman ve yapılandırma değişiklikleri kronolojik tutulur. Maddeler si
 ## 2026-08-14 14:16 — Commit ve push
 
 - `main` dalına yalnızca bu oturumun dosyaları eklendi; dokumanlar silmeleri, pycache ve senaryo JSON’ları commit dışı bırakıldı
+
+## 2026-08-14 14:54 — Rota algoritması seçimi ve ekip maliyeti
+
+- `scripts/benchmark_routing.py`: CW+2-opt, ALNS, OR-Tools aynı 6 örnekte (B/C/mixed/20/24/30) izole ölçüldü
+- `tests/test_routing_solvers.py`: her çözücü için izole pytest; ALNS ≤ CW mesafe regresyonu
+- `modules/optimization/routing.py`: üretim `solve_cvrp` = ALNS; OR-Tools ve portföy kaldırıldı; CW yalnızca tohum
+- `modules/optimization/solver.py`: tek ALNS çağrısı; `CVRP_TIME_LIMIT_S` silindi
+- `requirements.txt`: `ortools` bağımlılığı kaldırıldı
+- `tests/test_optimization.py`: portföy iddiaları ALNS’e çekildi (23 passed)
+- Karar: ALNS = OR-Tools mesafe, ~100× hızlı; CW büyük örneklerde %2–13 daha uzun. Maliyet seçimi MILP, ekip ataması ALNS.

@@ -189,7 +189,7 @@ class TestMilpSelection:
 
 
 class TestCvrpAssignment:
-    """CVRP rotalama: 3 ekip, kapasite kısıtı, CW+2-opt / ALNS / OR-Tools."""
+    """CVRP rotalama: 3 ekip, kapasite kısıtı, ALNS."""
 
     def test_routes_have_three_teams(self, temp_workspace):
         """Çıktı routes dict'i 3 ekip anahtarı içermeli."""
@@ -300,23 +300,17 @@ class TestScheduleJsonSchema:
         task = result["tasks"][0]
         for key in ["panel_id", "hasar", "priority", "estimated_cost", "service_min", "team_id"]:
             assert key in task
-        assert result["routing_solver"] in {
-            "clarke_wright_2opt",
-            "alns",
-            "ortools",
-            "nearest_neighbor",
-        }
+        assert result["routing_solver"] in {"alns", "nearest_neighbor"}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Rota portföyü (CW / ALNS / OR-Tools)
-# ─────────────────────────────────────────────────────────────────────────────
+# Rota çözücü (ALNS; CW tohum)
 
 
-class TestRoutingPortfolio:
-    """Clarke–Wright + 2-opt / ALNS / OR-Tools kapsama ve kapasite."""
+class TestAlnsRouting:
+    """ALNS kapsama, kapasite; CW tohumu tam kapsar."""
 
-    def test_clarke_wright_covers_all(self):
+    def test_clarke_wright_seed_covers_all(self):
         from modules.optimization.routing import clarke_wright, pack_into_k, two_opt_route
 
         n = 5
@@ -334,17 +328,15 @@ class TestRoutingPortfolio:
         assert len(packed) == 3
         assert {c for r in packed for c in r} == set(range(1, n + 1))
 
-    def test_portfolio_respects_capacity(self):
-        from modules.optimization.routing import solve_cvrp_portfolio
+    def test_alns_respects_capacity(self):
+        from modules.optimization.routing import solve_cvrp
 
         panels = [10, 20, 30, 40, 50]
         n = len(panels)
         dist = [[abs(i - j) * 0.25 for j in range(n + 1)] for i in range(n + 1)]
         service = [0, 60, 60, 60, 60, 60]
-        routes, name = solve_cvrp_portfolio(
-            panels, dist, service, n_vehicles=3, capacity=480, time_limit_s=2
-        )
-        assert name in {"clarke_wright_2opt", "alns", "ortools"}
+        routes, name = solve_cvrp(panels, dist, service, n_vehicles=3, capacity=480)
+        assert name == "alns"
         visited = [p for seq in routes.values() for p in seq]
         assert sorted(visited) == panels
         for seq in routes.values():

@@ -1,7 +1,9 @@
-"""CVRP rota çözücüleri: Clarke–Wright + 2-opt, ALNS, OR-Tools.
+"""CVRP rota çözücüsü: ALNS (Clarke–Wright + 2-opt tohumu).
 
-Üç yöntem aynı örnek üzerinde koşar; en yüksek kapsama, eşitlikte en kısa
-toplam mesafe seçilir. OR-Tools yoksa atlanır.
+Karşılaştırma (`scripts/benchmark_routing.py`, 6 örnek, 3 ekip, 480 dk):
+ALNS ve OR-Tools aynı mesafeyi verdi; ALNS ~0.07 s, OR-Tools 8 s.
+Clarke–Wright küçük örneklerde eşit, büyük örneklerde %2–13 daha uzun.
+Üretim çözücüsü ALNS; CW yalnızca tohum, 2-opt yerelde iyileştirme.
 """
 
 from __future__ import annotations
@@ -16,16 +18,15 @@ logger = logging.getLogger(__name__)
 RouteDict = dict[int, list[int]]  # team_id -> panel_id listesi
 
 
-def solve_cvrp_portfolio(
+def solve_cvrp(
     panels: list[int],
     dist: list[list[float]],
     service: list[int],
     n_vehicles: int,
     capacity: int,
-    time_limit_s: int = 8,
     rng_seed: int = 0,
 ) -> tuple[RouteDict, str]:
-    """CW+2-opt, ALNS ve OR-Tools adaylarından en iyisini döner.
+    """ALNS ile kapasite kısıtlı 3 ekip rotası.
 
     ``dist`` ve ``service`` indeks 0 = depo, 1..N = ``panels`` sırası.
     """
@@ -34,14 +35,10 @@ def solve_cvrp_portfolio(
         return empty, "empty"
 
     n = len(panels)
-    candidates: list[tuple[str, list[list[int]]]] = []
-
-    cw_routes = clarke_wright(n, dist, service, capacity)
-    cw_routes = [two_opt_route(r, dist) for r in cw_routes]
-    packed = pack_into_k(cw_routes, n_vehicles, service, capacity, dist)
-    candidates.append(("clarke_wright_2opt", packed))
-
-    alns_routes = alns(
+    seed = clarke_wright(n, dist, service, capacity)
+    seed = [two_opt_route(r, dist) for r in seed]
+    packed = pack_into_k(seed, n_vehicles, service, capacity, dist)
+    routes = alns(
         packed,
         dist,
         service,
@@ -50,16 +47,13 @@ def solve_cvrp_portfolio(
         iterations=max(200, min(1200, 80 * n)),
         rng=random.Random(rng_seed),
     )
-    candidates.append(("alns", alns_routes))
-
-    ortools_routes = solve_ortools(
-        n, dist, service, n_vehicles, capacity, time_limit_s
+    logger.info(
+        "ALNS: kapsama=%d/%d mesafe=%.4f km",
+        sum(len(r) for r in routes),
+        n,
+        _solution_cost(routes, dist),
     )
-    if ortools_routes is not None:
-        candidates.append(("ortools", ortools_routes))
-
-    best_name, best_idx = _pick_best(candidates, dist, service, capacity, n)
-    return _to_panel_routes(best_idx, panels, n_vehicles), best_name
+    return _to_panel_routes(routes, panels, n_vehicles), "alns"
 
 
 def route_distance(route: list[int], dist: list[list[float]]) -> float:
@@ -250,72 +244,6 @@ def alns(
     return [two_opt_route(r, dist) for r in best]
 
 
-def solve_ortools(
-    n: int,
-    dist: list[list[float]],
-    service: list[int],
-    n_vehicles: int,
-    capacity: int,
-    time_limit_s: int,
-) -> list[list[int]] | None:
-    """Google OR-Tools Routing (PATH_CHEAPEST_ARC + Guided Local Search)."""
-    try:
-        from ortools.constraint_solver import pywrapcp, routing_enums_pb2
-    except ImportError:
-        logger.info("ortools yüklü değil — bu aday atlandı.")
-        return None
-
-    manager = pywrapcp.RoutingIndexManager(n + 1, n_vehicles, 0)
-    routing = pywrapcp.RoutingModel(manager)
-    scale = 1000
-
-    def distance_cb(from_index: int, to_index: int) -> int:
-        i = manager.IndexToNode(from_index)
-        j = manager.IndexToNode(to_index)
-        return int(dist[i][j] * scale)
-
-    transit_idx = routing.RegisterTransitCallback(distance_cb)
-    routing.SetArcCostEvaluatorOfAllVehicles(transit_idx)
-
-    def demand_cb(from_index: int) -> int:
-        return int(service[manager.IndexToNode(from_index)])
-
-    demand_idx = routing.RegisterUnaryTransitCallback(demand_cb)
-    routing.AddDimensionWithVehicleCapacity(
-        demand_idx,
-        0,
-        [capacity] * n_vehicles,
-        True,
-        "Capacity",
-    )
-
-    params = pywrapcp.DefaultRoutingSearchParameters()
-    params.first_solution_strategy = (
-        routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC
-    )
-    params.local_search_metaheuristic = (
-        routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH
-    )
-    params.time_limit.FromSeconds(max(1, time_limit_s))
-
-    solution = routing.SolveWithParameters(params)
-    if solution is None:
-        logger.warning("OR-Tools çözüm bulamadı.")
-        return None
-
-    routes: list[list[int]] = []
-    for v in range(n_vehicles):
-        index = routing.Start(v)
-        route: list[int] = []
-        while not routing.IsEnd(index):
-            node = manager.IndexToNode(index)
-            if node != 0:
-                route.append(node)
-            index = solution.Value(routing.NextVar(index))
-        routes.append(route)
-    return routes
-
-
 def _join_endpoints(
     a: list[int], b: list[int], i: int, j: int
 ) -> list[int] | None:
@@ -447,33 +375,6 @@ def _roulette(weights: list[float], rng: random.Random) -> int:
         if pick <= acc:
             return i
     return len(weights) - 1
-
-
-def _pick_best(
-    candidates: list[tuple[str, list[list[int]]]],
-    dist: list[list[float]],
-    service: list[int],
-    capacity: int,
-    n: int,
-) -> tuple[str, list[list[int]]]:
-    ranked: list[tuple[int, float, int, str, list[list[int]]]] = []
-    for name, routes in candidates:
-        feasible = all(route_load(r, service) <= capacity for r in routes)
-        covered = {c for r in routes for c in r}
-        coverage = len(covered)
-        dist_km = _solution_cost(routes, dist)
-        penalty = 0 if feasible and coverage == n else 1
-        ranked.append((penalty, -coverage, dist_km, name, routes))
-        logger.info(
-            "Rota adayı %s: kapsama=%d/%d mesafe=%.4f km uygun=%s",
-            name,
-            coverage,
-            n,
-            dist_km,
-            feasible,
-        )
-    ranked.sort()
-    return ranked[0][3], ranked[0][4]
 
 
 def _to_panel_routes(

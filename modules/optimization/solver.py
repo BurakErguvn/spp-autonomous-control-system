@@ -8,8 +8,8 @@ Bu modül üç aşamada çalışır:
    tamir edilip edilmemesine karar verilir. Hotspot ve mikro_catlak
    güvenlik gereği zorunlu (must_fix); tozlanma TL bazlı kararla
    filtrelenir. Toplam servis süresi 3 ekibin günlük mesaisini aşamaz.
-3. **CVRP Atama:** Clarke–Wright + 2-opt, ALNS ve OR-Tools aynı örnekte
-   koşar; en iyi kapsama/mesafe seçilir. Çıktı `gorev_cizelgesi.json`.
+3. **CVRP Atama:** ALNS (Clarke–Wright + 2-opt tohumu) panelleri 3 ekibe
+   atar ve tur mesafesini küçültür. Çıktı `gorev_cizelgesi.json`.
 
 Parametreler IE Araştırma Raporu (dokumanlar/ie_arastirma_rapor.md ve
 Parametre Tablosu.csv) kaynaklıdır.
@@ -25,7 +25,7 @@ from pathlib import Path
 
 import pulp
 
-from .routing import solve_cvrp_portfolio
+from .routing import solve_cvrp
 
 logger = logging.getLogger(__name__)
 
@@ -73,9 +73,6 @@ class Parameters:
     # Karar ufku — bakım yapılmaması durumunda fırsat maliyetinin
     # değerlendirileceği süre (gün).
     DECISION_HORIZON_DAYS: int = 30
-
-    # CVRP çözücü zaman aşımı (saniye)
-    CVRP_TIME_LIMIT_S: int = 60
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -316,7 +313,7 @@ class MaintenanceScheduler:
         return [pid for pid in panel_ids if pulp.value(x[pid]) and pulp.value(x[pid]) > 0.5]
 
     # ──────────────────────────────────────────────────────────────────────────
-    # 3. CVRP atama (3 araç + MTZ)
+    # 3. CVRP atama (ALNS)
     # ──────────────────────────────────────────────────────────────────────────
 
     def _solve_cvrp(
@@ -324,8 +321,7 @@ class MaintenanceScheduler:
     ) -> dict[int, list[int]]:
         """3 araç paralel rotalama. Returns: {team_id: [panel_id, ...]}.
 
-        Adaylar: Clarke–Wright + 2-opt, ALNS, OR-Tools (varsa).
-        En yüksek kapsama, eşitlikte en kısa mesafe seçilir.
+        ALNS (CW+2-opt tohumu) 3 ekibe atar.
         """
         K = Parameters.TEAM_COUNT
         empty_routes: dict[int, list[int]] = {k: [] for k in range(1, K + 1)}
@@ -341,24 +337,20 @@ class MaintenanceScheduler:
             CostCalculator.service_minutes(panel_hasar[p]) for p in panels
         ]
         dist = self._distance_matrix_km(locs)
-        n = len(panels)
-        ot_limit = 2 if n <= 12 else (8 if n <= 40 else min(30, Parameters.CVRP_TIME_LIMIT_S))
 
-        routes, name = solve_cvrp_portfolio(
+        routes, name = solve_cvrp(
             panels,
             dist,
             service,
             K,
             Parameters.DAILY_SHIFT_MIN,
-            time_limit_s=ot_limit,
         )
         covered = {pid for seq in routes.values() for pid in seq}
         missing = set(panels) - covered
         if missing:
             logger.warning(
-                "Rota portföyü %d paneli kaçırdı (%s) — NN fallback.",
+                "ALNS %d paneli kaçırdı — NN fallback.",
                 len(missing),
-                name,
             )
             routes = self._cvrp_fallback(panels, panel_hasar)
             name = "nearest_neighbor"

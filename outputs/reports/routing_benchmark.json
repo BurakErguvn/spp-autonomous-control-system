@@ -1,0 +1,298 @@
+{
+  "winner": "alns",
+  "wins": {
+    "clarke_wright_2opt": 2,
+    "alns": 4,
+    "ortools": 0
+  },
+  "rows": [
+    {
+      "instance": "B_2_hotspot",
+      "solver": "clarke_wright_2opt",
+      "n": 2,
+      "runtime_s": 0.0,
+      "coverage": 2,
+      "distance_km": 0.373532,
+      "fuel_tl": 1.1206,
+      "feasible": true,
+      "loads": [
+        90,
+        0,
+        0
+      ],
+      "ok": true
+    },
+    {
+      "instance": "B_2_hotspot",
+      "solver": "alns",
+      "n": 2,
+      "runtime_s": 0.0033,
+      "coverage": 2,
+      "distance_km": 0.373532,
+      "fuel_tl": 1.1206,
+      "feasible": true,
+      "loads": [
+        90,
+        0,
+        0
+      ],
+      "ok": true
+    },
+    {
+      "instance": "B_2_hotspot",
+      "solver": "ortools",
+      "n": 2,
+      "runtime_s": 2.3499,
+      "coverage": 2,
+      "distance_km": 0.373532,
+      "fuel_tl": 1.1206,
+      "feasible": true,
+      "loads": [
+        0,
+        0,
+        90
+      ],
+      "ok": true
+    },
+    {
+      "instance": "C_10_crack",
+      "solver": "clarke_wright_2opt",
+      "n": 10,
+      "runtime_s": 0.0001,
+      "coverage": 10,
+      "distance_km": 0.4904,
+      "fuel_tl": 1.4712,
+      "feasible": true,
+      "loads": [
+        480,
+        120,
+        0
+      ],
+      "ok": true
+    },
+    {
+      "instance": "C_10_crack",
+      "solver": "alns",
+      "n": 10,
+      "runtime_s": 0.0215,
+      "coverage": 10,
+      "distance_km": 0.4904,
+      "fuel_tl": 1.4712,
+      "feasible": true,
+      "loads": [
+        480,
+        120,
+        0
+      ],
+      "ok": true
+    },
+    {
+      "instance": "C_10_crack",
+      "solver": "ortools",
+      "n": 10,
+      "runtime_s": 2.0012,
+      "coverage": 10,
+      "distance_km": 0.4904,
+      "fuel_tl": 1.4712,
+      "feasible": true,
+      "loads": [
+        0,
+        480,
+        120
+      ],
+      "ok": true
+    },
+    {
+      "instance": "mixed_15",
+      "solver": "clarke_wright_2opt",
+      "n": 15,
+      "runtime_s": 0.0002,
+      "coverage": 15,
+      "distance_km": 0.813564,
+      "fuel_tl": 2.4407,
+      "feasible": true,
+      "loads": [
+        465,
+        315,
+        0
+      ],
+      "ok": true
+    },
+    {
+      "instance": "mixed_15",
+      "solver": "alns",
+      "n": 15,
+      "runtime_s": 0.0498,
+      "coverage": 15,
+      "distance_km": 0.793761,
+      "fuel_tl": 2.3813,
+      "feasible": true,
+      "loads": [
+        465,
+        315,
+        0
+      ],
+      "ok": true
+    },
+    {
+      "instance": "mixed_15",
+      "solver": "ortools",
+      "n": 15,
+      "runtime_s": 8.0016,
+      "coverage": 15,
+      "distance_km": 0.793761,
+      "fuel_tl": 2.3813,
+      "feasible": true,
+      "loads": [
+        315,
+        465,
+        0
+      ],
+      "ok": true
+    },
+    {
+      "instance": "hotspot_20",
+      "solver": "clarke_wright_2opt",
+      "n": 20,
+      "runtime_s": 0.0003,
+      "coverage": 20,
+      "distance_km": 0.750007,
+      "fuel_tl": 2.25,
+      "feasible": true,
+      "loads": [
+        450,
+        450,
+        0
+      ],
+      "ok": true
+    },
+    {
+      "instance": "hotspot_20",
+      "solver": "alns",
+      "n": 20,
+      "runtime_s": 0.0677,
+      "coverage": 20,
+      "distance_km": 0.690965,
+      "fuel_tl": 2.0729,
+      "feasible": true,
+      "loads": [
+        450,
+        450,
+        0
+      ],
+      "ok": true
+    },
+    {
+      "instance": "hotspot_20",
+      "solver": "ortools",
+      "n": 20,
+      "runtime_s": 8.0016,
+      "coverage": 20,
+      "distance_km": 0.690965,
+      "fuel_tl": 2.0729,
+      "feasible": true,
+      "loads": [
+        450,
+        450,
+        0
+      ],
+      "ok": true
+    },
+    {
+      "instance": "crack_24_tight",
+      "solver": "clarke_wright_2opt",
+      "n": 24,
+      "runtime_s": 0.0003,
+      "coverage": 24,
+      "distance_km": 1.043643,
+      "fuel_tl": 3.1309,
+      "feasible": true,
+      "loads": [
+        480,
+        480,
+        480
+      ],
+      "ok": true
+    },
+    {
+      "instance": "crack_24_tight",
+      "solver": "alns",
+      "n": 24,
+      "runtime_s": 0.0691,
+      "coverage": 24,
+      "distance_km": 0.941398,
+      "fuel_tl": 2.8242,
+      "feasible": true,
+      "loads": [
+        480,
+        480,
+        480
+      ],
+      "ok": true
+    },
+    {
+      "instance": "crack_24_tight",
+      "solver": "ortools",
+      "n": 24,
+      "runtime_s": 8.0012,
+      "coverage": 24,
+      "distance_km": 0.941398,
+      "fuel_tl": 2.8242,
+      "feasible": true,
+      "loads": [
+        480,
+        480,
+        480
+      ],
+      "ok": true
+    },
+    {
+      "instance": "all_30_hotspot",
+      "solver": "clarke_wright_2opt",
+      "n": 30,
+      "runtime_s": 0.0004,
+      "coverage": 30,
+      "distance_km": 1.286891,
+      "fuel_tl": 3.8607,
+      "feasible": true,
+      "loads": [
+        450,
+        450,
+        450
+      ],
+      "ok": true
+    },
+    {
+      "instance": "all_30_hotspot",
+      "solver": "alns",
+      "n": 30,
+      "runtime_s": 0.0642,
+      "coverage": 30,
+      "distance_km": 1.124522,
+      "fuel_tl": 3.3736,
+      "feasible": true,
+      "loads": [
+        450,
+        450,
+        450
+      ],
+      "ok": true
+    },
+    {
+      "instance": "all_30_hotspot",
+      "solver": "ortools",
+      "n": 30,
+      "runtime_s": 8.0012,
+      "coverage": 30,
+      "distance_km": 1.124522,
+      "fuel_tl": 3.3736,
+      "feasible": true,
+      "loads": [
+        450,
+        450,
+        450
+      ],
+      "ok": true
+    }
+  ]
+}
