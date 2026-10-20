@@ -23,3 +23,7 @@ Kullanıcı mesajları kronolojik tutulur. Maddeler silinmez; yalnızca sona ekl
 ## 2026-08-14 14:54 — Rota algoritması seçimi ve ekip maliyeti
 
 > Şuan birden fazla rotalama algoritması kullanıyoruz. Hepsini kullanmak yerine her bir algoritma için bir test ortamı oluştur ve aralarından en performanslı olanı seç diğerlerini kaldır. Ekip ataması ve maliyeti analiz eden optimizasyon algoritması hangisiydi ?
+
+## 2026-08-14 17:00 — QAOA QUBO deneyi ve klasik–kuantum raporu
+
+> Deneysel olarak bir şey test etmek istiyorum kullandığımız ALNS ve PuLp + CBC 'yi QUBO formuna dönüştürüp QUOA da çalıştıracağız. Ardından klasik bilgisayardaki optimizasyon algoritmalarımızla quantum bilgisayarındakilerle karşılaştırıp detaylı bir rapor hazırlamanı istiyorum. Bu raporda bu iki sürecinde grafikler ve tablolar ile zenginleştirilmeli. IBM API key var sana vereceğim.

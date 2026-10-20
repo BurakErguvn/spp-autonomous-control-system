@@ -44,3 +44,13 @@ Kod, doküman ve yapılandırma değişiklikleri kronolojik tutulur. Maddeler si
 - `requirements.txt`: `ortools` bağımlılığı kaldırıldı
 - `tests/test_optimization.py`: portföy iddiaları ALNS’e çekildi (23 passed)
 - Karar: ALNS = OR-Tools mesafe, ~100× hızlı; CW büyük örneklerde %2–13 daha uzun. Maliyet seçimi MILP, ekip ataması ALNS.
+
+## 2026-08-14 17:00 — QAOA QUBO deneyi ve klasik–kuantum raporu
+
+- `modules/optimization/qubo.py`: seçim ve oyuncak CVRP QUBO (ölçekli must-fix, slack)
+- `modules/optimization/qaoa_runner.py`: RZZ/RX QAOA, Aer statevector/shot, IBM SamplerV2 (token env)
+- `modules/optimization/qaoa_instances.py`, `scripts/run_qaoa_benchmark.py`, figürler `outputs/reports/qaoa/`
+- `tests/test_qubo.py`, `tests/test_qaoa.py` (33 passed birlikte)
+- `requirements-qaoa.txt`, `.gitignore`: `.env`, `.qiskit/`
+- `docs/qaoa_karsilastirma_raporu.md`
+- Karar: üretim CBC+ALNS değişmedi. QAOA $N\le 8$ seçimde CBC ile örtüşür; CVRP ve saha ölçeği NISQ dışı. IBM bu koşuda tokensız atlandı.

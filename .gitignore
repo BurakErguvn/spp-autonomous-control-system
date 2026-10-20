@@ -3,3 +3,10 @@ yolo26n.pt
 yolo26s.pt
 models/
 runs/
+.env
+.env.*
+.qiskit/
+
+__pycache__/
+*.pyc
+.pytest_cache/

@@ -105,3 +105,26 @@ Hotspot/çatlak must-fix (büyük negatif $O_i$). Toz: $O=3$ TL $\ll M\approx 23
 | tüm hotspot | 30 | 1.287 | 1.125 | 1.125 | $<10^{-3}$ | 0.064 | 8.00 |
 
 ALNS, OR-Tools ile aynı $Z=\sum_k\mathrm{tur}(k)$; $N=30$'da CW'ye göre $\Delta\approx 12.6\%$. OR-Tools zaman limiti $2$–$8$ s. Seçim: ALNS.
+
+## 2026-08-14 17:00 — QAOA QUBO deneyi ve klasik–kuantum raporu
+
+Seçim QUBO (ölçekli bonus $B_h=5000$, $B_c=3000$; slack $y_k$; $\lambda=8\max|c_j|$):
+
+$$
+H_{\mathrm{sel}}=\sum_j\bigl((M_j-O_j)-B_j\bigr)x_j+\lambda\Bigl(\sum_j s'_j x_j+\sum_k 2^k y_k-C'\Bigr)^2+\sum_j O_j
+$$
+
+Ising: $x_i=(1-Z_i)/2$. QAOA $p$ katman: $\mathrm{RZ}(2\gamma h)$, $\mathrm{RZZ}(2\gamma J)$, $\mathrm{RX}(2\beta)$.
+
+Aer (2026-08-14): tam sayım = CBC tüm seçim örneklerinde. QAOA $Z$ eşleşmesi:
+
+| Örnek | kübit | CBC $Z$ | QAOA $Z$ | adet | Hamming |
+|---|---|---|---|---|---|
+| n4 çatlak | 6 | 4864.5 | 4864.5 | 3 | 0 |
+| n6 mixed | 10 | 4723.5 | 4723.5 | 3 | 0 |
+| n8 çatlak | 11 | 8113.5 | 8113.5 | 5 | 0 |
+| n10 hotspot | 13 | 9492.0 | 9492.0 | 6 | 2 |
+| n12 çatlak | 15 | 11362.5 | 11362.5 | 7 | 4 |
+| n6 dust | 14 | 4760.9 | 3145.4 | 2 vs 3 | 1 |
+
+CVRP $N=3,K=2$: ALNS $0.375$ km, QAOA $0.543$ km (fizibil). $N=4$ ($20$ kübit): QAOA fizibil değil. Üretim $NKT\approx 900$ kübit.
