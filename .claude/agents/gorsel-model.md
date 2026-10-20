@@ -6,7 +6,6 @@ effort: high
 color: purple
 tools: Read, Edit, Write, Bash, NotebookEdit, SendMessage, ListAgents, WebSearch, WebFetch, mcp__deb3de85-b552-4afb-8baf-2cea631eded8__search_files, mcp__deb3de85-b552-4afb-8baf-2cea631eded8__read_file_content, mcp__deb3de85-b552-4afb-8baf-2cea631eded8__download_file_content, mcp__deb3de85-b552-4afb-8baf-2cea631eded8__get_file_metadata
 disallowedTools: Agent
-isolation: worktree
 hooks:
   PreToolUse:
     - matcher: "Edit|Write|NotebookEdit|Bash|Read"

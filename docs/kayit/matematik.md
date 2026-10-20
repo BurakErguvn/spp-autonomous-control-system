@@ -148,3 +148,21 @@ Senaryo C: toplam yol $0.424$ km → yakıt $0.424\times 3 \approx 1.27$ TL; top
 Veri seti (yerel, remap sonrası): karma poligon/bbox dosyaları Ultralytics'te atılınca kayıp — train çatlak $1979/3533$ (%56), toz $2237/4267$ (%52); valid çatlak $236/344$ (%69), toz $317/439$ (%72). Train'de hotspot örneklerinin %100'ü gri (termal) görüntülerde, toz örneklerinin %95'i renkli.
 
 YOLO26m (Colab T4, 70 epoch) doğrulama: mAP50 genel 0.501; hotspot 0.795, mikro çatlak 0.395, tozlanma 0.313 (valid: 499 görüntü, 762 örnek).
+
+## 2026-10-20 20:40 — #2/#3 tester sonucu: PASS (koşullu)
+
+- Poligon → eksen-hizalı bbox (normalize koordinat): $x_1=\min_i x_i,\ x_2=\max_i x_i$, $y_1=\min_i y_i,\ y_2=\max_i y_i$; $[0,1]$'e kırpma; $c_x=(x_1+x_2)/2,\ w=x_2-x_1$ (y için aynı); $w<10^{-4}$ veya $h<10^{-4}$ ise dejenere. Tester'ın bağımsız türetmesi 9196 dosyanın 0'ında fark verdi (tol $2\cdot10^{-6}$).
+- Gruplama: kaynak stem ∪ çevirme-duyarsız dHash ($\le 4$ bit) ∧ küçük resim NCC $\ge 0.85$, union-find; 9196 görüntü → 2838 grup (en büyük 66). Bölme 80/10/10, seed 42.
+- Sonuç: hotspot 10348 / 1294 / 1291 instance (%80.0/10.0/10.0); mikro_catlak 4038 (remap sonrası 51 yinelenen satır tekilleştirildi), tozlanma 4948. Arka plan oranı train %30.9, valid %33.4, test %31.7.
+
+## 2026-10-20 21:10 — Arıza maliyetleri araştırması ve oturum devri
+
+Kaynak: `docs/arastirma/ariza-maliyetleri.md` (dal `worktree-agent-ac97f9fac39b3d091`). Notasyon: $n_f$ etkilenen modül, $P$ modül gücü (kWp), $Y_d$ özgül verim (kWh/kWp/gün), $c_e$ enerji fiyatı (TL/kWh), $H$ ufuk (gün), $N_{sub}$ bypass diyot sayısı, $w$ ücret (TL/sa).
+
+- Modül kayıp oranı: $L_f = 1/N_{sub}\approx 0.33$ (aktif bypass, IEA PVPS T13-01 §6.2.2); çatlak: $L_f=\max(0,\alpha(a_{in}-0.08))$, $\alpha$ [D]; modül/string devre dışı: $L_f=1$ (string açık devrede $n_f=S$).
+- Fırsat maliyeti: $C_{opp}=n_f L_f P Y_d c_e H$.
+- Tozlanma (doğrusal birikim, yağışla sıfırlanma): $C_{opp}^{toz}=nPY_dc_e\,\tfrac{rH^2}{2}$, ortalama kayıp $rH/2$. Konya $r=0.00296$/gün (Erbakan Üniv. tezi 2024) → $H=30$ gün için ort. ≈ %4.4; mevcut kod sabit %10/ay.
+- Bakım: $C_{maint}=\tfrac{t_f}{60}n_{ekip}w+\sum_k p_{f,k}m_k+c_{yol}$; geri ödeme $T_{pay}=C_{maint}/(365\,n_fL_fPY_dc_e)$ yıl.
+- Modül değişimi: 0.10 €/Wp (600 Wp → 60 €) + montaj ≈30 € (Köntges, IEA PVPS T13 çalıştayı, 2025-10-23). %100 kayıplı modül ≈1 yılda, %10 kayıplı ≈10 yılda öder.
+- Tespit (Avrupa tipik, Tsanakas 2025): drone IR 450–650 €/MW, 0.4–0.8 sa/MW; drone RGB 250–400 €/MW; saha EL 1500–2500 €/MW, 2–4 sa/MW; I-V 900–1400 €/MW, >4 sa/MW. IEA T13-10:2018: el tipi IR 3.75–5 sa/MW, drone IR 1.25–2.5 sa/MW (fark büyük olasılıkla hazırlık süresi [T]).
+- İşçilik tabanı: 2026 asgari ücret işveren maliyeti ≈39.2–40.9 bin TL/ay, 225 sa/ay ile ≈182 TL/sa (araştırmacı hesabı; koddaki 200 TL/sa yakın, teknisyen ücreti kaynaksız).

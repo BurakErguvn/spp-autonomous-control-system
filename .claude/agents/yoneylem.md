@@ -6,7 +6,6 @@ effort: xhigh
 color: orange
 tools: Read, Edit, Write, Bash, SendMessage, ListAgents, WebSearch, WebFetch
 disallowedTools: Agent
-isolation: worktree
 hooks:
   PreToolUse:
     - matcher: "Edit|Write|NotebookEdit|Bash|Read"

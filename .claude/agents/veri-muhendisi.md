@@ -6,7 +6,6 @@ effort: high
 color: blue
 tools: Read, Edit, Write, Bash, SendMessage, ListAgents
 disallowedTools: Agent
-isolation: worktree
 hooks:
   PreToolUse:
     - matcher: "Edit|Write|NotebookEdit|Bash|Read"

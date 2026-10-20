@@ -75,3 +75,48 @@ Kod, doküman ve yapılandırma değişiklikleri kronolojik tutulur. Maddeler si
 
 - GitHub (`BurakErguvn/spp-autonomous-control-system`): 17 etiket (`alan:*`, `öncelik:P0-P2`, `karar-gerekli`, `agent:*`), 5 milestone (Faz 0–4), 15 issue (#1–#15) açıldı
 - Projects panosu bekliyor: gh token'ında `project` izni yok (kullanıcı `gh auth refresh -s project,read:project` çalıştıracak)
+
+## 2026-10-20 20:28 — #2/#3 dalının tester doğrulaması
+
+- Kod değişmedi (orkestratör). `tester` (Sonnet/high) dal `claude/sad-margulis-eb217f` (`b485ecb`) üzerinde başlatıldı: testler, 0-corrupt taraması, poligon→bbox doğruluğu, determinizm, bölmeler arası stem/hash sızıntısı, sınıf × modalite × bölme tablosunun bağımsız yeniden hesabı.
+- Gerekçe: veri hattı doğrulaması (matematik/model değişikliği değil) → Sonnet yeterli. Mevcut `data/ges_clean` üzerine yazılmaması, yeniden üretimin geçici klasöre yapılması istendi.
+
+## 2026-10-20 20:40 — #2/#3 tester sonucu: PASS (koşullu)
+
+- Dal `claude/sad-margulis-eb217f`: `96611d3` test: `tests/test_audit_dataset_extra.py` (15 test: determinizm, çevirme-duyarsız dHash, dejenere/hatalı satır, gerçek veri invariantları); `b966ae7` + `9718a95` docs: `outputs/test_reports/issue-2-3.md`. Üretim koduna dokunulmadı.
+- Kabul kriterleri (#2, #3) bağımsız yeniden üretildi: 0 corrupt (Ultralytics 8.4.41), ham veri md5 farkı 0/9196, scratch'e yeniden üretim `diff -rq` farksız (deterministik), bölmeler arası stem/grup kesişimi 0, test hotspot 1291.
+- Orkestratör teyidi: `pytest -q tests --ignore=tests/test_gui.py` → 73 passed, 3 skipped (`test_gui.py` Qt ortam hatası, main'de de var).
+- Açık alan kararları (kullanıcıya): (1) train'deki 2271 arka plan görüntüsünün tamamı kaynakta kapsam dışı sınıfla etiketli (2561'i termal anomali: Diode/ByPassed/StringOpenCircuit…) → olduğu gibi / çıkar-ayır / 15 sınıflı eğit; (2) yakın-kopya eşiği (dHash ≤4, NCC ≥0.85) komşu drone karelerini ayırmıyor (test↔train NCC ≥0.90: 30/921) → koru / gevşet (`--hash-thr 8 --ncc-thr 0.90`).
+- Kapsam dışı: `scripts/train_yolo26.py` hâlâ `ges_project.yaml` + ham veride yerinde `remap_labels` kullanıyor; `ges_clean`'e bağlanması ayrı issue.
+
+## 2026-10-20 20:45 — #2/#3 alan kararları ve iş bölümü
+
+- Karar (kullanıcı): yakın-kopya eşiği gevşetilecek (`--hash-thr 8 --ncc-thr 0.90`); gerekçe: ardışık drone kareleri bölmeler arasında kalıyor (test↔train NCC ≥0.90: 30/921), test skoru iyimser.
+- Karar (kullanıcı): kapsam dışı termal arızalar (Diode, ByPassed, StringOpenCircuit, ReversedPolarity …) eğitime katılmak isteniyor, ancak mevcut örnek sayısı yetersiz → önce güvenilir/uyumlu veri seti genişletme kaynakları ve bu arıza tiplerinin onarım + geleneksel tespit (zaman, para) maliyetleri araştırılacak. Taksonomi kararı (#6) araştırma sonrasına ertelendi.
+- Karar (kullanıcı): #2/#3 PR'ı eşik değişikliği uygulanıp tester yeniden doğruladıktan sonra açılacak.
+- İş bölümü: veri-muhendisi (Sonnet/high) aynı dalda eşik + yeniden üretim; arastirmaci ×2 (Sonnet/medium, ayrı worktree'ler) veri seti genişletme ve arıza maliyetleri; katip (Haiku/low) kararları #3/#6'ya işler.
+
+## 2026-10-20 20:55 — Yazan agentlarda worktree izolasyonu kaldırıldı
+
+- Sorun: veri-muhendisi, tanımındaki `isolation: worktree` yüzünden main'den yeni boş worktree'de başladı; mevcut `claude/sad-margulis-eb217f` dalına erişemedi (izolasyon kuralı + guard). Hiçbir değişiklik yapılmadı.
+- `.claude/agents/{veri-muhendisi,gorsel-model,ucus-planlayici,yoneylem}.md`: `isolation: worktree` satırı silindi.
+- `CLAUDE.md` iş akışı md. 2: worktree'yi orkestratör açar (`git worktree add`) veya mevcut dalın yolunu verir; agent o yola `cd` eder.
+- Karar (kullanıcı): "worktree'yi orkestratör açsın" seçeneği; gerekçe: FAIL → aynı dalda düzeltme döngüsü ancak böyle çalışır (tester zaten bu modelde çalışıyordu). Agentın önerdiği hook/sınıflandırıcı izinlerini açma seçeneği uygulanmadı.
+- Veri seti genişletme araştırması tamamlandı: `docs/arastirma/veri-seti-genisletme.md`, dal `worktree-agent-a50dd5221d0f267d1` (`026b840`).
+
+## 2026-10-20 21:00 — Izolasyon kaldırma bu oturumda etkisiz
+
+- veri-muhendisi ikinci denemede de izole worktree'de (`38f5e1d` tabanlı) başladı ve talimat gereği durdu; değişiklik yok. Neden: agent tanımları oturum başında yükleniyor, `.claude/agents/*.md` düzenlemesi yeni oturumda etkin olur.
+
+## 2026-10-20 21:10 — Arıza maliyetleri araştırması ve oturum devri
+
+- Arıza maliyetleri araştırması tamamlandı: `docs/arastirma/ariza-maliyetleri.md`, dal `worktree-agent-ac97f9fac39b3d091` (`62c7c26`, Refs #6 #10). 9 arıza tipi × {onarım, maliyet, süre, kayıp, aciliyet, geleneksel tespit}; 22 kaynak; doğrulanamayanlar [D], tahminler [T] işaretli. Türkiye TL birim fiyatları ve adam-saat süreleri kaynaksız (yerel teklif gerekir).
+- Öne çıkan bulgu: açık devre bypass diyot normal koşulda IR'de görünmüyor; termalde sıcak görünen aktif bypass alt dizisi (Köntges, IEA PVPS T13 2025) → #6'da Diode/ByPassed birleştirme seçeneğini destekliyor.
+- Kapsam dışı gözlem: `modules/optimization/solver.py` `HASAR_PRIORITY`/`MUST_FIX_CLASSES` yalnız 3 sınıf; yeni sınıflarda `service_minutes`=30, `daily_loss_kwh`=0 varsayılanı sessizce devreye girer; toz kaybı sabit %10/30·H (birikimli değil).
+- Karar (kullanıcı): eşik işi (#3) yeni oturumda sürdürülecek (agent tanımı değişikliği oturum başında yükleniyor).
+- Açık işler (yeni oturum için):
+  1. veri-muhendisi → `claude/sad-margulis-eb217f` worktree'sinde eşik gevşetme (`--hash-thr 8 --ncc-thr 0.90` başlangıç), yeniden üretim, `--keep-original-classes` ile bölme bağımsızlığı; sonra tester → PR (Closes #2, #3).
+  2. #6 taksonomi kararı kullanıcıda: veri seti genişletme seçenekleri (S1 sınıf birleştirme / S2 +ikinci aşama sınıflandırıcı / S3 +kendi verisiyle yarı-otomatik etiketleme) ve maliyet bulguları birlikte sunulacak.
+  3. İki araştırma dalı (`worktree-agent-a50dd5221d0f267d1`, `worktree-agent-ac97f9fac39b3d091`) main'e alınmadı (`origin/main` = `38f5e1d` tabanlı); merge kullanıcı onayıyla.
+  4. Eğitim hattının `ges_clean.yaml`'a bağlanması (tester bulgu 3) — #8'e not mu, yeni issue mu, kullanıcıya soruldu.
+  5. Veri lisansı çelişkisi: Roboflow `data.yaml` `license: Private`, README "CC BY 4.0" — netleşmeli.

@@ -23,7 +23,7 @@ Model seçimi işin zorluğuna göre yapılır: orkestratör gerekirse çağrı 
 ### İş akışı
 
 1. Her iş bir GitHub issue'sudur (`BurakErguvn/spp-autonomous-control-system`; etiketler `alan:*`, `öncelik:P0-P2`, `agent:*`; milestone = faz).
-2. Yazan agent kendi worktree'sinde/dalında çalışır, ortak rapor formatıyla döner.
+2. Yazan agent kendi worktree'sinde/dalında çalışır, ortak rapor formatıyla döner. Worktree'yi orkestratör açar (`git worktree add .claude/worktrees/<ad> -b <dal> main`) veya mevcut dalın worktree yolunu verir; agent tanımlarında `isolation: worktree` yoktur (her çağrıda main'den boş worktree açıp mevcut dalda çalışmayı engelliyordu). Agent verilen yola `cd` eder, dal değiştirmez.
 3. `tester` aynı dalda bağımsız doğrular. FAIL → bulgular yazan agenta geri gider (aynı agent `SendMessage` ile sürdürülür). PASS → orkestratör PR açar (`Closes #N`).
 4. **Kullanıcı onayı gereken adımlar:** main'e merge; alan kararları (sınıf taksonomisi, maliyet parametreleri, problem formülasyonu, kabul eşikleri). Agentlar bu konularda seçenek + öneri hazırlar, karar vermez.
 5. Agentlar birbirine `SendMessage` ile danışabilir, iş devredemez. Karar doğuran istişareler issue'ya yorum olarak işlenir.
