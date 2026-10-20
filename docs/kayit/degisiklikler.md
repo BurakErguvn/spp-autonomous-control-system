@@ -54,3 +54,19 @@ Kod, doküman ve yapılandırma değişiklikleri kronolojik tutulur. Maddeler si
 - `requirements-qaoa.txt`, `.gitignore`: `.env`, `.qiskit/`
 - `docs/qaoa_karsilastirma_raporu.md`
 - Karar: üretim CBC+ALNS değişmedi. QAOA $N\le 8$ seçimde CBC ile örtüşür; CVRP ve saha ölçeği NISQ dışı. IBM bu koşuda tokensız atlandı.
+
+## 2026-10-20 20:15 — Proje sorun analizi (geriye dönük kayıt)
+
+- Kod değişmedi; analiz yapıldı. Bulgular GitHub Issues'a taşındı (Faz 0–4).
+- Ayrı oturum: `scripts/audit_and_fix_dataset.py` (poligon→bbox, grup bazlı sızıntısız bölme, denetim raporu) — dal `claude/sad-margulis-eb217f`, commit `b485ecb`; henüz main'e alınmadı, tester doğrulamasını bekliyor.
+- Karar: modeller zaten COCO ön-eğitimliydi (Colab günlüğü: "Transferred 768/768 items from pretrained weights"); düşük skorun ana nedeni veri ve sınıf tanımı.
+
+## 2026-10-20 20:15 — Çok-agentlı çalışma ortamı
+
+- `.gitignore`: `__pycache__/`, `*.pyc`, `.pytest_cache/`, `.claude/worktrees/` eklendi
+- QAOA deneyi `deney/qaoa` dalına alındı (`7540dad`); main'e girmedi
+- `CLAUDE.md`: orkestratör modeli, roller, iş akışı, sabit kısıtlar ve kayıt kuralı (Cursor kuralının Claude Code karşılığı)
+- `.claude/agents/*.md`: 7 rol — veri-muhendisi (Sonnet/high), gorsel-model (Opus/high), yoneylem (Opus/xhigh), ucus-planlayici (Opus/high), arastirmaci (Sonnet/medium), tester (Sonnet/high, kritikte Opus), katip (Haiku/low)
+- `.claude/hooks/guard.py` + `roles.json`: rol bazlı yazma izinleri; git push/merge/rebase/reset --hard/dal silme, paket kurulumu, rm -rf, `.env` ve (katip dışı) GitHub'a yazma engeli
+- `.claude/hooks/log_input.py` + `.claude/settings.json`: kullanıcı mesajları `inputlar.md`'ye otomatik eklenir (alt agent turları ve gizli bilgiler hariç)
+- Kararlar (kullanıcı): sorun kaydı = GitHub Issues + Projects panosu (repo herkese açık, yayımlanması onaylandı); mekanizma = subagent + SendMessage (Agent Teams deneysel olduğu için değil); her yazan agent kendi worktree'sinde; serbest danışma ama iş devri yok, kararlar issue'ya; kullanıcı onayı = main'e merge + alan kararları; hesaplama yerelde ≤15 dk, uzun eğitim Colab; dil Türkçe; model seçimi işin zorluğuna göre karma

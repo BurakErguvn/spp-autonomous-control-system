@@ -27,3 +27,11 @@ Kullanıcı mesajları kronolojik tutulur. Maddeler silinmez; yalnızca sona ekl
 ## 2026-08-14 17:00 — QAOA QUBO deneyi ve klasik–kuantum raporu
 
 > Deneysel olarak bir şey test etmek istiyorum kullandığımız ALNS ve PuLp + CBC 'yi QUBO formuna dönüştürüp QUOA da çalıştıracağız. Ardından klasik bilgisayardaki optimizasyon algoritmalarımızla quantum bilgisayarındakilerle karşılaştırıp detaylı bir rapor hazırlamanı istiyorum. Bu raporda bu iki sürecinde grafikler ve tablolar ile zenginleştirilmeli. IBM API key var sana vereceğim.
+
+## 2026-10-20 20:15 — Proje sorun analizi (geriye dönük kayıt)
+
+> GES Bakımını drone ile optimizasyon yaptığımız bir proje. Projede yol ve maliyet optimizasyonunu yapan algoritmalar en basic algoritmalar bu iş için uygun mu değil mi en iyi performansı veriyor mu araştırılmadan yapıldı.  Veri setinde ayrımı yapılan sınıflar çok sağlıklı olmadığını düşünüyorum başlangıçta YOLO26 small modeli ile sağlıklı olmayan bir skor aldım. Yakın zamanda colab üzerinden T4 gpu ile medium modeli tekrar eğittim driveımda "GES" klasörünün içerisinde bulunuyor son eğitim dosyaları. Altını çizmek isterim ki benim bildiğim modeller sıfırdan eğitildi herhangi bir önceden eğitilmiş (COCO gibi) bir modele fine tuning uygulamadım bu seçenek de gö… (kısaltıldı; özet: projedeki problemlerin tanımlanması istendi)
+
+## 2026-10-20 20:15 — Çok-agentlı çalışma ortamı (geriye dönük kayıt)
+
+> /grill-me Öncelikle Keşfettiğimiz problemleri bir yere kaydedelim. Düzeltmelere başlamadan önce çalışma ortamımızı ayarlayalım. İşlemlerin Multiagent olarak ilerlemesini ve yapılan işin zorluğuna göre modelerin ayarlanmasını istiyorum. Sen orkestratör olarak doğru şekilde yönlendirmeleri ve alt-agentların işlerinin doğru şekilde yaptıklarından emin olmalısın. Alt agentlar birbirleri ile iletişim kurabilir ve istişare edebilirler. Alt agentları ve işlevlerini, kısıtlamalarını birlikte ayarlayalım.

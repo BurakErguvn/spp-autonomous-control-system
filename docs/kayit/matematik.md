@@ -128,3 +128,23 @@ Aer (2026-08-14): tam sayım = CBC tüm seçim örneklerinde. QAOA $Z$ eşleşme
 | n6 dust | 14 | 4760.9 | 3145.4 | 2 vs 3 | 1 |
 
 CVRP $N=3,K=2$: ALNS $0.375$ km, QAOA $0.543$ km (fizibil). $N=4$ ($20$ kübit): QAOA fizibil değil. Üretim $NKT\approx 900$ kübit.
+
+## 2026-10-20 20:15 — Proje sorun analizi (geriye dönük kayıt)
+
+Başabaş süresi (bakım maliyeti = birikmiş fırsat maliyeti), mevcut `Parameters` ile:
+
+$$T^{*}(h)=\frac{M(h)}{L(h)\cdot p},\qquad M(h)=\frac{s_h}{60}c_{\text{tech}}+\mathbb{1}[h\neq\text{toz}]\big(0.7\cdot 100+0.3\cdot 4500\big)$$
+
+| Hasar | $M$ (TL) | $O_{30}$ (TL) | $T^{*}$ (gün) |
+|---|---|---|---|
+| hotspot | 1570.0 | 18.00 | ≈ 2617 |
+| mikro çatlak | 1620.0 | 4.50 | ≈ 10800 |
+| tozlanma | 23.3 | 0.30 | ≈ 2333 |
+
+Sonuç: ekonomik terim hiçbir arızayı seçtirmiyor; seçim yalnızca amaçtaki $-10^6$ / $-5\cdot10^5$ katsayılarından geliyor (MILP fiilen öncelik sıralı açgözlü kural).
+
+Senaryo C: toplam yol $0.424$ km → yakıt $0.424\times 3 \approx 1.27$ TL; toplam maliyet $14581$ TL'nin $\approx\%0.009$'u. Ekip yükleri 60 / 480 / 0 dk (makespan 480 dk; dengeli çözümde 180 dk).
+
+Veri seti (yerel, remap sonrası): karma poligon/bbox dosyaları Ultralytics'te atılınca kayıp — train çatlak $1979/3533$ (%56), toz $2237/4267$ (%52); valid çatlak $236/344$ (%69), toz $317/439$ (%72). Train'de hotspot örneklerinin %100'ü gri (termal) görüntülerde, toz örneklerinin %95'i renkli.
+
+YOLO26m (Colab T4, 70 epoch) doğrulama: mAP50 genel 0.501; hotspot 0.795, mikro çatlak 0.395, tozlanma 0.313 (valid: 499 görüntü, 762 örnek).

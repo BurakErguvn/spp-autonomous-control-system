@@ -1,0 +1,56 @@
+{
+  "_aciklama": "Her rolün Edit/Write/NotebookEdit ile yazabileceği yollar (repo köküne göre glob). guard.py okur. Değişiklikler kullanıcı onayıyla yapılır.",
+  "roles": {
+    "veri-muhendisi": {
+      "write": [
+        "scripts/*dataset*", "scripts/audit_*", "scripts/remap_*",
+        "data/*.yaml", "data/README.md",
+        "tests/**",
+        "outputs/reports/dataset*"
+      ],
+      "gh_write": false
+    },
+    "gorsel-model": {
+      "write": [
+        "scripts/train_*", "scripts/*.ipynb", "scripts/eval_*",
+        "modules/ai_inference/**", "modules/data_feeder/**",
+        "modules/gui/**", "main.py",
+        "tests/**",
+        "outputs/reports/model*", "outputs/reports/train*"
+      ],
+      "gh_write": false
+    },
+    "yoneylem": {
+      "write": [
+        "modules/optimization/**",
+        "scripts/benchmark_*", "scripts/run_scenarios.py", "scripts/comparison_report.py",
+        "modules/gui/**", "main.py",
+        "docs/Parametre Tablosu.csv",
+        "tests/**",
+        "outputs/reports/routing*", "outputs/reports/optim*", "outputs/reports/comparison*"
+      ],
+      "gh_write": false
+    },
+    "ucus-planlayici": {
+      "write": [
+        "modules/flight_planning/**",
+        "scripts/*flight*",
+        "tests/**",
+        "outputs/reports/flight*"
+      ],
+      "gh_write": false
+    },
+    "arastirmaci": {
+      "write": ["docs/arastirma/**"],
+      "gh_write": false
+    },
+    "tester": {
+      "write": ["tests/**", "outputs/test_reports/**"],
+      "gh_write": false
+    },
+    "katip": {
+      "write": ["docs/**"],
+      "gh_write": true
+    }
+  }
+}
