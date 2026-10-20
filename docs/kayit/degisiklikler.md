@@ -120,3 +120,12 @@ Kod, doküman ve yapılandırma değişiklikleri kronolojik tutulur. Maddeler si
   3. İki araştırma dalı (`worktree-agent-a50dd5221d0f267d1`, `worktree-agent-ac97f9fac39b3d091`) main'e alınmadı (`origin/main` = `38f5e1d` tabanlı); merge kullanıcı onayıyla.
   4. Eğitim hattının `ges_clean.yaml`'a bağlanması (tester bulgu 3) — #8'e not mu, yeni issue mu, kullanıcıya soruldu.
   5. Veri lisansı çelişkisi: Roboflow `data.yaml` `license: Private`, README "CC BY 4.0" — netleşmeli.
+
+## 2026-10-20 21:11 — 15 sınıf genişletme iptal, lisans CC BY 4.0, #8 notu, oturum devri
+
+- Karar (kullanıcı): 15 sınıfa genişletme yapılmıyor; 3 hedef sınıf korunuyor. Gerekçe: araştırılan açık termal PV veri setlerinin hiçbiri bbox sunmuyor (sınıflandırma kırpmaları), tespit görevine eklenemiyor. #6'ya yorum: issuecomment-6297823185.
+- Karar (kullanıcı): Roboflow "SOLAR PANEL DET" lisansı **CC BY 4.0** (`data.yaml`'daki `license: Private` geçersiz); atıf gerekli.
+- Karar (kullanıcı): eğitim hattının `ges_clean.yaml`'a bağlanması #8'e not edildi (issuecomment-6297823572).
+- Açık: #6'da kapsam dışı termal anomali içeren arka plan görüntüleri (train 2271) bırakılacak mı, çıkarılacak mı.
+- Sorun: `.claude/hooks/log_input.py` kullanıcı turu olarak gelen alt agent raporlarını/görev bildirimlerini (`<agent-message`, `<task-notification`) de `inputlar.md`'ye yazıyor (bu oturumda 7 hatalı girdi, 20:35–21:11); ayrıca kayıt yolunu `cwd`'den alıyor. Düzeltme + hatalı girdilerin çıkarılması izin sınıflandırıcısınca reddedildi; kullanıcı kararı bekliyor.
+- Güncel açık işler (yeni oturum): (1) #3 eşik gevşetme → tester → PR (Closes #2, #3); (2) #6 arka plan kararı; (3) araştırma dallarının (`worktree-agent-a50dd5221d0f267d1`, `worktree-agent-ac97f9fac39b3d091`) main'e merge onayı; (4) log_input hook düzeltmesi; (5) main push.
