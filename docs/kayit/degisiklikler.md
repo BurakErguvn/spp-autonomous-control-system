@@ -70,3 +70,8 @@ Kod, doküman ve yapılandırma değişiklikleri kronolojik tutulur. Maddeler si
 - `.claude/hooks/guard.py` + `roles.json`: rol bazlı yazma izinleri; git push/merge/rebase/reset --hard/dal silme, paket kurulumu, rm -rf, `.env` ve (katip dışı) GitHub'a yazma engeli
 - `.claude/hooks/log_input.py` + `.claude/settings.json`: kullanıcı mesajları `inputlar.md`'ye otomatik eklenir (alt agent turları ve gizli bilgiler hariç)
 - Kararlar (kullanıcı): sorun kaydı = GitHub Issues + Projects panosu (repo herkese açık, yayımlanması onaylandı); mekanizma = subagent + SendMessage (Agent Teams deneysel olduğu için değil); her yazan agent kendi worktree'sinde; serbest danışma ama iş devri yok, kararlar issue'ya; kullanıcı onayı = main'e merge + alan kararları; hesaplama yerelde ≤15 dk, uzun eğitim Colab; dil Türkçe; model seçimi işin zorluğuna göre karma
+
+## 2026-10-20 20:30 — GitHub Issues kurulumu
+
+- GitHub (`BurakErguvn/spp-autonomous-control-system`): 17 etiket (`alan:*`, `öncelik:P0-P2`, `karar-gerekli`, `agent:*`), 5 milestone (Faz 0–4), 15 issue (#1–#15) açıldı
+- Projects panosu bekliyor: gh token'ında `project` izni yok (kullanıcı `gh auth refresh -s project,read:project` çalıştıracak)
