@@ -129,3 +129,10 @@ Kod, doküman ve yapılandırma değişiklikleri kronolojik tutulur. Maddeler si
 - Açık: #6'da kapsam dışı termal anomali içeren arka plan görüntüleri (train 2271) bırakılacak mı, çıkarılacak mı.
 - Sorun: `.claude/hooks/log_input.py` kullanıcı turu olarak gelen alt agent raporlarını/görev bildirimlerini (`<agent-message`, `<task-notification`) de `inputlar.md`'ye yazıyor (bu oturumda 7 hatalı girdi, 20:35–21:11); ayrıca kayıt yolunu `cwd`'den alıyor. Düzeltme + hatalı girdilerin çıkarılması izin sınıflandırıcısınca reddedildi; kullanıcı kararı bekliyor.
 - Güncel açık işler (yeni oturum): (1) #3 eşik gevşetme → tester → PR (Closes #2, #3); (2) #6 arka plan kararı; (3) araştırma dallarının (`worktree-agent-a50dd5221d0f267d1`, `worktree-agent-ac97f9fac39b3d091`) main'e merge onayı; (4) log_input hook düzeltmesi; (5) main push.
+
+## 2026-10-20 21:14 — Arka plan anomalileri çıkarılsın, hook izni, merge, push
+
+- Karar (kullanıcı, #6): kapsam dışı termal anomali içeren arka plan görüntüleri (kaynakta etiketli ama 3 sınıflı eşlemede boş kalan; train'de 2271) **eğitim verisinden çıkarılacak**. Uygulama veri-muhendisinde, #3 eşik işiyle aynı dalda (`claude/sad-margulis-eb217f`); gerçek "Non Defective" arka planlar kalır. valid/test'te aynı görüntülerin ele alınışı (çıkar / ayrı raporla) için veri-muhendisi seçenek + öneri sunacak.
+- `.claude/hooks/log_input.py` (kullanıcı izniyle): `<agent-message`, `<task-notification`, `<system-reminder`, `<side-sessions-event`, `<ci-monitor-event` ile başlayan turlar kaydedilmez; kayıt yolu `CLAUDE_PROJECT_DIR`'den alınır (yoksa `cwd`). Test: agent mesajı → kayıt yok; normal mesaj → kayıt var.
+- `docs/kayit/inputlar.md` (kullanıcı izniyle): hook hatasıyla eklenen 7 kullanıcı-dışı girdi (20:35–21:11, alt agent raporları ve görev bildirimleri) çıkarıldı; iki başlık düzeltildi.
+- Karar (kullanıcı): araştırma dalları main'e merge edildi (`docs/arastirma/veri-seti-genisletme.md`, `docs/arastirma/ariza-maliyetleri.md`); main push edildi.
