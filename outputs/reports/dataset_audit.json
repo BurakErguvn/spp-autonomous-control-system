@@ -1,0 +1,1094 @@
+{
+  "source": "data/SOLAR PANEL DET.v1i.yolo26",
+  "output": "data/ges_clean",
+  "data_yaml": "data/ges_clean.yaml",
+  "params": {
+    "ratios": [
+      0.8,
+      0.1,
+      0.1
+    ],
+    "seed": 42,
+    "hash_thr": 8,
+    "ncc_thr": 0.9,
+    "ncc_only_thr": 0.93,
+    "gray_thr": 1.0,
+    "oos_mode": "separate",
+    "oos_classes": [
+      "MultiByPassed",
+      "MultiDiode",
+      "SingleByPassed",
+      "SingleDiode",
+      "StringOpenCircuit",
+      "StringReversedPolarity",
+      "Electrical Damage"
+    ],
+    "keep_original_classes": false
+  },
+  "taxonomy": {
+    "names": [
+      "hotspot",
+      "mikro_catlak",
+      "tozlanma"
+    ],
+    "remap": {
+      "Bird Drop": "tozlanma",
+      "Defective": "mikro_catlak",
+      "Dusty": "tozlanma",
+      "Electrical Damage": null,
+      "Non Defective": null,
+      "Physical Damage": "mikro_catlak",
+      "Snow": "tozlanma",
+      "MultiByPassed": null,
+      "MultiDiode": null,
+      "MultiHotSpot": "hotspot",
+      "SingleByPassed": null,
+      "SingleDiode": null,
+      "SingleHotSpot": "hotspot",
+      "StringOpenCircuit": null,
+      "StringReversedPolarity": null
+    }
+  },
+  "label_conversion": {
+    "train": {
+      "bbox": 24132,
+      "duplicate_after_remap": 51,
+      "polygon": 7315
+    },
+    "valid": {
+      "bbox": 1720,
+      "duplicate_after_remap": 0,
+      "polygon": 528
+    },
+    "test": {
+      "bbox": 295,
+      "duplicate_after_remap": 0,
+      "polygon": 323
+    }
+  },
+  "label_sources": {
+    "txt.orig": 9196
+  },
+  "mixed_files_before": {
+    "train": {
+      "mixed_files_original_classes": 552,
+      "mixed_files_after_remap": 450,
+      "instances_in_mixed_files_after_remap": {
+        "tozlanma": 2237,
+        "mikro_catlak": 1979,
+        "hotspot": 30
+      }
+    },
+    "valid": {
+      "mixed_files_original_classes": 65,
+      "mixed_files_after_remap": 54,
+      "instances_in_mixed_files_after_remap": {
+        "tozlanma": 317,
+        "mikro_catlak": 236
+      }
+    },
+    "test": {
+      "mixed_files_original_classes": 33,
+      "mixed_files_after_remap": 26,
+      "instances_in_mixed_files_after_remap": {
+        "mikro_catlak": 150,
+        "tozlanma": 130
+      }
+    }
+  },
+  "grouping": {
+    "images": 9196,
+    "source_stems": 3115,
+    "near_duplicate_pairs": 901,
+    "near_duplicate_pairs_cross_stem": 489,
+    "groups": 2799,
+    "group_size_hist": {
+      "1": 398,
+      "2": 18,
+      "3": 1910,
+      "4": 96,
+      "5": 16,
+      "6": 263,
+      "7": 29,
+      "8": 3,
+      "9": 36,
+      "10": 8,
+      "11": 2,
+      "12": 6,
+      "13": 7,
+      "14": 1,
+      "15": 1,
+      "16": 1,
+      "17": 1,
+      "33": 1,
+      "34": 1,
+      "45": 1
+    },
+    "largest_groups": [
+      {
+        "size": 45,
+        "stems": [
+          "210915_Hangchon_33m_211015_00074_JPG_jpg",
+          "210915_Hangchon_33m_211015_00113_JPG_jpg",
+          "210915_Hangchon_33m_211015_00134_JPG_jpg",
+          "210915_Hangchon_33m_211015_00135_JPG_jpg",
+          "210915_Hangchon_33m_211015_00135_JPG_jpg-dfb6b8c1f60562daac1da937904f0ed_jpg",
+          "210915_Hangchon_33m_211015_00140_JPG_jpg",
+          "210915_Hangchon_33m_211015_00150_JPG_jpg",
+          "210915_Hangchon_33m_211015_00201_JPG_jpg",
+          "210915_Hangchon_33m_211015_00213_JPG_jpg"
+        ]
+      },
+      {
+        "size": 34,
+        "stems": [
+          "210915_Hangchon_33m_211015_00592_JPG_jpg",
+          "210915_Hangchon_33m_211015_00780_JPG_jpg",
+          "210915_Hangchon_33m_211015_00809_JPG_jpg",
+          "210915_Hangchon_33m_211015_01021_JPG_jpg",
+          "DJI_0309_jpg",
+          "Physical_Damge_225_jpg",
+          "Thermal_Solar_1_jpg",
+          "fsdfsdf_jpg"
+        ]
+      },
+      {
+        "size": 33,
+        "stems": [
+          "210915_Hangchon_33m_211015_00080_JPG_jpg",
+          "210915_Hangchon_33m_211015_00086_JPG_jpg",
+          "210915_Hangchon_33m_211015_00622_JPG_jpg",
+          "210915_Hangchon_33m_211015_00630_JPG_jpg",
+          "210915_Hangchon_33m_211015_00637_JPG_jpg",
+          "210915_Hangchon_33m_211015_00845_JPG_jpg"
+        ]
+      },
+      {
+        "size": 17,
+        "stems": [
+          "Physical_Damge_125_jpg",
+          "Physical_Damge_126_jpg",
+          "Physical_Damge_135_jpg",
+          "Physical_Damge_145_jpg",
+          "Physical_Damge_146_jpg",
+          "Physical_Damge_153_jpg",
+          "Physical_Damge_159_jpg"
+        ]
+      },
+      {
+        "size": 16,
+        "stems": [
+          "Physical_Damge_119_jpg",
+          "Physical_Damge_120_jpg",
+          "Physical_Damge_147_jpg",
+          "Physical_Damge_148_jpg"
+        ]
+      }
+    ]
+  },
+  "leakage_before": {
+    "stems_shared": {
+      "train-valid": 72,
+      "train-test": 17,
+      "valid-test": 8
+    },
+    "groups_shared": {
+      "train-valid": 140,
+      "train-test": 45,
+      "valid-test": 20
+    },
+    "groups_spanning_multiple_splits": 175,
+    "near_duplicate_pairs_across_splits": {
+      "test-train": 60,
+      "test-valid": 15,
+      "train-valid": 137
+    },
+    "test_images_with_train_twin": 46,
+    "test_images": 93
+  },
+  "leakage_after": {
+    "stems_shared": {
+      "train-valid": 0,
+      "train-test": 0,
+      "valid-test": 0
+    },
+    "groups_shared": {
+      "train-valid": 0,
+      "train-test": 0,
+      "valid-test": 0
+    },
+    "groups_spanning_multiple_splits": 0,
+    "near_duplicate_pairs_across_splits": {},
+    "test_images_with_train_twin": 0,
+    "test_images": 920
+  },
+  "ncc_leakage_before": {
+    "test-train": {
+      "images": 93,
+      "ge_0.90": 36,
+      "ge_0.95": 31,
+      "ge_0.97": 31
+    },
+    "valid-train": {
+      "images": 553,
+      "ge_0.90": 118,
+      "ge_0.95": 89,
+      "ge_0.97": 84
+    },
+    "test-valid": {
+      "images": 93,
+      "ge_0.90": 13,
+      "ge_0.95": 12,
+      "ge_0.97": 12
+    }
+  },
+  "ncc_leakage_after": {
+    "test-train": {
+      "images": 606,
+      "ge_0.90": 15,
+      "ge_0.95": 0,
+      "ge_0.97": 0
+    },
+    "valid-train": {
+      "images": 640,
+      "ge_0.90": 15,
+      "ge_0.95": 0,
+      "ge_0.97": 0
+    },
+    "test-valid": {
+      "images": 606,
+      "ge_0.90": 4,
+      "ge_0.95": 0,
+      "ge_0.97": 0
+    }
+  },
+  "ncc_leakage_assigned": {
+    "test-train": {
+      "images": 920,
+      "ge_0.90": 23,
+      "ge_0.95": 0,
+      "ge_0.97": 0
+    },
+    "valid-train": {
+      "images": 920,
+      "ge_0.90": 28,
+      "ge_0.95": 0,
+      "ge_0.97": 0
+    },
+    "test-valid": {
+      "images": 920,
+      "ge_0.90": 5,
+      "ge_0.95": 0,
+      "ge_0.97": 0
+    }
+  },
+  "split_sizes": {
+    "train": 5337,
+    "valid": 640,
+    "test": 606,
+    "oos": 2613,
+    "dropped": 0
+  },
+  "oos": {
+    "mode": "separate",
+    "classes": [
+      "Electrical Damage",
+      "MultiByPassed",
+      "MultiDiode",
+      "SingleByPassed",
+      "SingleDiode",
+      "StringOpenCircuit",
+      "StringReversedPolarity"
+    ],
+    "removed_images": {
+      "train": {
+        "gray": 1983,
+        "rgb": 36
+      },
+      "valid": {
+        "gray": 280,
+        "rgb": 0
+      },
+      "test": {
+        "gray": 304,
+        "rgb": 10
+      }
+    },
+    "removed_total": {
+      "train": 2019,
+      "valid": 280,
+      "test": 314
+    },
+    "removed_by_source_class": {
+      "SingleByPassed": {
+        "train": {
+          "gray": 965,
+          "rgb": 0
+        },
+        "valid": {
+          "gray": 143,
+          "rgb": 0
+        },
+        "test": {
+          "gray": 146,
+          "rgb": 0
+        }
+      },
+      "SingleDiode": {
+        "train": {
+          "gray": 432,
+          "rgb": 0
+        },
+        "valid": {
+          "gray": 59,
+          "rgb": 0
+        },
+        "test": {
+          "gray": 81,
+          "rgb": 0
+        }
+      },
+      "StringOpenCircuit": {
+        "train": {
+          "gray": 369,
+          "rgb": 0
+        },
+        "valid": {
+          "gray": 73,
+          "rgb": 0
+        },
+        "test": {
+          "gray": 57,
+          "rgb": 0
+        }
+      },
+      "MultiByPassed": {
+        "train": {
+          "gray": 176,
+          "rgb": 0
+        },
+        "valid": {
+          "gray": 19,
+          "rgb": 0
+        },
+        "test": {
+          "gray": 30,
+          "rgb": 0
+        }
+      },
+      "MultiDiode": {
+        "train": {
+          "gray": 252,
+          "rgb": 0
+        },
+        "valid": {
+          "gray": 26,
+          "rgb": 0
+        },
+        "test": {
+          "gray": 35,
+          "rgb": 0
+        }
+      },
+      "StringReversedPolarity": {
+        "train": {
+          "gray": 66,
+          "rgb": 0
+        },
+        "valid": {
+          "gray": 8,
+          "rgb": 0
+        },
+        "test": {
+          "gray": 6,
+          "rgb": 0
+        }
+      },
+      "Electrical Damage": {
+        "train": {
+          "gray": 6,
+          "rgb": 36
+        },
+        "valid": {
+          "gray": 0,
+          "rgb": 0
+        },
+        "test": {
+          "gray": 0,
+          "rgb": 10
+        }
+      }
+    },
+    "retained_empty_background": {
+      "(etiketsiz)": {
+        "train": {
+          "gray": 7,
+          "rgb": 0
+        },
+        "valid": {
+          "gray": 0,
+          "rgb": 0
+        },
+        "test": {
+          "gray": 0,
+          "rgb": 0
+        }
+      },
+      "Non Defective": {
+        "train": {
+          "gray": 4,
+          "rgb": 182
+        },
+        "valid": {
+          "gray": 0,
+          "rgb": 23
+        },
+        "test": {
+          "gray": 0,
+          "rgb": 41
+        }
+      }
+    },
+    "mixed_images": {
+      "train": {
+        "images_with_oos_boxes": 1263,
+        "images_with_any_unmapped_boxes": 1472
+      },
+      "valid": {
+        "images_with_oos_boxes": 133,
+        "images_with_any_unmapped_boxes": 166
+      },
+      "test": {
+        "images_with_oos_boxes": 130,
+        "images_with_any_unmapped_boxes": 144
+      }
+    }
+  },
+  "images_before": {
+    "images": {
+      "gray": {
+        "train": 7473,
+        "valid": 453,
+        "test": 40
+      },
+      "rgb": {
+        "train": 1077,
+        "valid": 100,
+        "test": 53
+      }
+    },
+    "background_images": {
+      "gray": {
+        "train": 7,
+        "valid": 0,
+        "test": 0
+      },
+      "rgb": {
+        "train": 0,
+        "valid": 0,
+        "test": 0
+      }
+    }
+  },
+  "images_after": {
+    "images": {
+      "gray": {
+        "train": 4393,
+        "valid": 514,
+        "test": 492
+      },
+      "rgb": {
+        "train": 944,
+        "valid": 126,
+        "test": 114
+      }
+    },
+    "background_images": {
+      "gray": {
+        "train": 11,
+        "valid": 0,
+        "test": 0
+      },
+      "rgb": {
+        "train": 182,
+        "valid": 23,
+        "test": 41
+      }
+    }
+  },
+  "classes_before_target": {
+    "instances": {
+      "hotspot": {
+        "gray": {
+          "train": 12392,
+          "valid": 532,
+          "test": 9
+        },
+        "rgb": {
+          "train": 0,
+          "valid": 0,
+          "test": 0
+        }
+      },
+      "mikro_catlak": {
+        "gray": {
+          "train": 1398,
+          "valid": 174,
+          "test": 88
+        },
+        "rgb": {
+          "train": 2084,
+          "valid": 170,
+          "test": 124
+        }
+      },
+      "tozlanma": {
+        "gray": {
+          "train": 53,
+          "valid": 9,
+          "test": 3
+        },
+        "rgb": {
+          "train": 4214,
+          "valid": 430,
+          "test": 239
+        }
+      }
+    },
+    "images": {
+      "hotspot": {
+        "gray": {
+          "train": 4550,
+          "valid": 216,
+          "test": 5
+        },
+        "rgb": {
+          "train": 0,
+          "valid": 0,
+          "test": 0
+        }
+      },
+      "mikro_catlak": {
+        "gray": {
+          "train": 525,
+          "valid": 51,
+          "test": 24
+        },
+        "rgb": {
+          "train": 513,
+          "valid": 51,
+          "test": 27
+        }
+      },
+      "tozlanma": {
+        "gray": {
+          "train": 27,
+          "valid": 4,
+          "test": 2
+        },
+        "rgb": {
+          "train": 516,
+          "valid": 50,
+          "test": 24
+        }
+      }
+    }
+  },
+  "classes_after_target": {
+    "instances": {
+      "hotspot": {
+        "gray": {
+          "train": 10349,
+          "valid": 1294,
+          "test": 1290
+        },
+        "rgb": {
+          "train": 0,
+          "valid": 0,
+          "test": 0
+        }
+      },
+      "mikro_catlak": {
+        "gray": {
+          "train": 1289,
+          "valid": 211,
+          "test": 160
+        },
+        "rgb": {
+          "train": 1947,
+          "valid": 188,
+          "test": 243
+        }
+      },
+      "tozlanma": {
+        "gray": {
+          "train": 39,
+          "valid": 3,
+          "test": 23
+        },
+        "rgb": {
+          "train": 4028,
+          "valid": 406,
+          "test": 449
+        }
+      }
+    },
+    "images": {
+      "hotspot": {
+        "gray": {
+          "train": 3873,
+          "valid": 448,
+          "test": 450
+        },
+        "rgb": {
+          "train": 0,
+          "valid": 0,
+          "test": 0
+        }
+      },
+      "mikro_catlak": {
+        "gray": {
+          "train": 501,
+          "valid": 63,
+          "test": 36
+        },
+        "rgb": {
+          "train": 462,
+          "valid": 74,
+          "test": 55
+        }
+      },
+      "tozlanma": {
+        "gray": {
+          "train": 24,
+          "valid": 3,
+          "test": 6
+        },
+        "rgb": {
+          "train": 490,
+          "valid": 60,
+          "test": 40
+        }
+      }
+    }
+  },
+  "classes_after_source": {
+    "instances": {
+      "Bird Drop": {
+        "gray": {
+          "train": 3,
+          "valid": 0,
+          "test": 11
+        },
+        "rgb": {
+          "train": 1667,
+          "valid": 118,
+          "test": 143
+        }
+      },
+      "Defective": {
+        "gray": {
+          "train": 301,
+          "valid": 58,
+          "test": 32
+        },
+        "rgb": {
+          "train": 1356,
+          "valid": 133,
+          "test": 162
+        }
+      },
+      "Dusty": {
+        "gray": {
+          "train": 31,
+          "valid": 3,
+          "test": 12
+        },
+        "rgb": {
+          "train": 1406,
+          "valid": 170,
+          "test": 176
+        }
+      },
+      "Electrical Damage": {
+        "gray": {
+          "train": 9,
+          "valid": 0,
+          "test": 0
+        },
+        "rgb": {
+          "train": 273,
+          "valid": 49,
+          "test": 39
+        }
+      },
+      "Non Defective": {
+        "gray": {
+          "train": 19,
+          "valid": 10,
+          "test": 0
+        },
+        "rgb": {
+          "train": 2939,
+          "valid": 367,
+          "test": 360
+        }
+      },
+      "Physical Damage": {
+        "gray": {
+          "train": 1037,
+          "valid": 153,
+          "test": 128
+        },
+        "rgb": {
+          "train": 593,
+          "valid": 55,
+          "test": 81
+        }
+      },
+      "Snow": {
+        "gray": {
+          "train": 5,
+          "valid": 0,
+          "test": 0
+        },
+        "rgb": {
+          "train": 955,
+          "valid": 118,
+          "test": 130
+        }
+      },
+      "MultiByPassed": {
+        "gray": {
+          "train": 95,
+          "valid": 17,
+          "test": 6
+        },
+        "rgb": {
+          "train": 0,
+          "valid": 0,
+          "test": 0
+        }
+      },
+      "MultiDiode": {
+        "gray": {
+          "train": 301,
+          "valid": 73,
+          "test": 37
+        },
+        "rgb": {
+          "train": 0,
+          "valid": 0,
+          "test": 0
+        }
+      },
+      "MultiHotSpot": {
+        "gray": {
+          "train": 4240,
+          "valid": 531,
+          "test": 526
+        },
+        "rgb": {
+          "train": 0,
+          "valid": 0,
+          "test": 0
+        }
+      },
+      "SingleByPassed": {
+        "gray": {
+          "train": 941,
+          "valid": 98,
+          "test": 104
+        },
+        "rgb": {
+          "train": 0,
+          "valid": 0,
+          "test": 0
+        }
+      },
+      "SingleDiode": {
+        "gray": {
+          "train": 878,
+          "valid": 91,
+          "test": 68
+        },
+        "rgb": {
+          "train": 0,
+          "valid": 0,
+          "test": 0
+        }
+      },
+      "SingleHotSpot": {
+        "gray": {
+          "train": 6109,
+          "valid": 763,
+          "test": 764
+        },
+        "rgb": {
+          "train": 0,
+          "valid": 0,
+          "test": 0
+        }
+      },
+      "StringOpenCircuit": {
+        "gray": {
+          "train": 165,
+          "valid": 16,
+          "test": 20
+        },
+        "rgb": {
+          "train": 0,
+          "valid": 0,
+          "test": 0
+        }
+      },
+      "StringReversedPolarity": {
+        "gray": {
+          "train": 27,
+          "valid": 4,
+          "test": 6
+        },
+        "rgb": {
+          "train": 0,
+          "valid": 0,
+          "test": 0
+        }
+      }
+    },
+    "images": {
+      "Bird Drop": {
+        "gray": {
+          "train": 3,
+          "valid": 0,
+          "test": 3
+        },
+        "rgb": {
+          "train": 145,
+          "valid": 22,
+          "test": 17
+        }
+      },
+      "Defective": {
+        "gray": {
+          "train": 290,
+          "valid": 48,
+          "test": 32
+        },
+        "rgb": {
+          "train": 391,
+          "valid": 68,
+          "test": 55
+        }
+      },
+      "Dusty": {
+        "gray": {
+          "train": 20,
+          "valid": 3,
+          "test": 3
+        },
+        "rgb": {
+          "train": 251,
+          "valid": 33,
+          "test": 18
+        }
+      },
+      "Electrical Damage": {
+        "gray": {
+          "train": 6,
+          "valid": 0,
+          "test": 0
+        },
+        "rgb": {
+          "train": 100,
+          "valid": 17,
+          "test": 19
+        }
+      },
+      "Non Defective": {
+        "gray": {
+          "train": 13,
+          "valid": 4,
+          "test": 0
+        },
+        "rgb": {
+          "train": 391,
+          "valid": 56,
+          "test": 56
+        }
+      },
+      "Physical Damage": {
+        "gray": {
+          "train": 495,
+          "valid": 63,
+          "test": 36
+        },
+        "rgb": {
+          "train": 185,
+          "valid": 28,
+          "test": 20
+        }
+      },
+      "Snow": {
+        "gray": {
+          "train": 4,
+          "valid": 0,
+          "test": 0
+        },
+        "rgb": {
+          "train": 122,
+          "valid": 6,
+          "test": 5
+        }
+      },
+      "MultiByPassed": {
+        "gray": {
+          "train": 93,
+          "valid": 14,
+          "test": 6
+        },
+        "rgb": {
+          "train": 0,
+          "valid": 0,
+          "test": 0
+        }
+      },
+      "MultiDiode": {
+        "gray": {
+          "train": 209,
+          "valid": 16,
+          "test": 21
+        },
+        "rgb": {
+          "train": 0,
+          "valid": 0,
+          "test": 0
+        }
+      },
+      "MultiHotSpot": {
+        "gray": {
+          "train": 2498,
+          "valid": 315,
+          "test": 296
+        },
+        "rgb": {
+          "train": 0,
+          "valid": 0,
+          "test": 0
+        }
+      },
+      "SingleByPassed": {
+        "gray": {
+          "train": 550,
+          "valid": 50,
+          "test": 49
+        },
+        "rgb": {
+          "train": 0,
+          "valid": 0,
+          "test": 0
+        }
+      },
+      "SingleDiode": {
+        "gray": {
+          "train": 468,
+          "valid": 55,
+          "test": 45
+        },
+        "rgb": {
+          "train": 0,
+          "valid": 0,
+          "test": 0
+        }
+      },
+      "SingleHotSpot": {
+        "gray": {
+          "train": 2103,
+          "valid": 204,
+          "test": 242
+        },
+        "rgb": {
+          "train": 0,
+          "valid": 0,
+          "test": 0
+        }
+      },
+      "StringOpenCircuit": {
+        "gray": {
+          "train": 99,
+          "valid": 13,
+          "test": 12
+        },
+        "rgb": {
+          "train": 0,
+          "valid": 0,
+          "test": 0
+        }
+      },
+      "StringReversedPolarity": {
+        "gray": {
+          "train": 21,
+          "valid": 4,
+          "test": 5
+        },
+        "rgb": {
+          "train": 0,
+          "valid": 0,
+          "test": 0
+        }
+      }
+    }
+  },
+  "min_test_check": {
+    "hotspot": {
+      "required": 300,
+      "actual": 1290,
+      "ok": true
+    }
+  },
+  "ultralytics_verify": {
+    "available": true,
+    "ultralytics_version": "8.4.41",
+    "splits": {
+      "train": {
+        "images": 5337,
+        "missing": 0,
+        "found": 5337,
+        "empty": 193,
+        "corrupt": 0,
+        "with_segments": 0,
+        "instances": 17652,
+        "messages": []
+      },
+      "valid": {
+        "images": 640,
+        "missing": 0,
+        "found": 640,
+        "empty": 23,
+        "corrupt": 0,
+        "with_segments": 0,
+        "instances": 2102,
+        "messages": []
+      },
+      "test": {
+        "images": 606,
+        "missing": 0,
+        "found": 606,
+        "empty": 41,
+        "corrupt": 0,
+        "with_segments": 0,
+        "instances": 2165,
+        "messages": []
+      }
+    },
+    "check_det_dataset": {
+      "ok": true,
+      "nc": 3,
+      "names": [
+        "hotspot",
+        "mikro_catlak",
+        "tozlanma"
+      ]
+    },
+    "total_corrupt": 0
+  }
+}
