@@ -174,3 +174,9 @@ Kod, doküman ve yapılandırma değişiklikleri kronolojik tutulur. Maddeler si
 - Bulgular (düşük): (1) 0.90–0.95 NCC aralığında artık sızıntı 15/15/4 (ardışık kareler); (2) `scripts/audit_and_fix_dataset.py:808` `--ncc-only-thr` ≤0 değerleri doğrulanmıyor (`-1` tüm çiftleri birleştirir); (3) gri tozlanma test n=23; (6) `tests/test_audit_dataset_extra.py` içinde Electrical Damage hakkında eski yorum; (7) `.claude/hooks/guard.py:98` worktree yollarını ana köke göre değerlendirip `.claude/` öneki nedeniyle Edit/Write'ı reddediyor.
 - Orkestratör teyidi: `pytest -q tests --ignore=tests/test_gui.py` 86 passed, 8 skipped; main ile çakışma yok (`git merge-tree`).
 - Dal origin'e pushlandı. PR açıldı: https://github.com/BurakErguvn/spp-autonomous-control-system/pull/16 (Closes #2, #3; Refs #6). CI kontrolü yok. Merge kullanıcı onayı bekliyor.
+
+## 2026-10-30 15:05 — guard.py: worktree yolları worktree köküne göre değerlendirilsin
+
+- Sorun (PR #16 doğrulamasında tester bildirdi): `.claude/hooks/guard.py` yazma yolunu ana repo köküne göre hesaplıyordu; `.claude/worktrees/<ad>/...` altındaki her dosya `.claude/` önekiyle eşleşip Edit/Write'ta reddediliyordu, alt agentlar kendi worktree'lerinde izinli yollara (`tests/**`, `outputs/test_reports/**` …) yazamıyordu.
+- Değişiklik (`.claude/hooks/guard.py`, kullanıcı izniyle): göreli yol `.claude/worktrees/<ad>/` önekiyle başlıyorsa önek soyulur, `roles.json` kuralları worktree köküne göre uygulanır. Worktree içindeki `.claude/` ve `CLAUDE.md` yine korunur; worktree dizininin kendisi ve `..` ile kaçış reddedilir.
+- Sınama (stdin'e örnek JSON): ana kökte izinli yol → izin; worktree'de izinli yol (cwd ana kök ve worktree) → izin; worktree'de `.claude/hooks/x` ve `CLAUDE.md` → red; tester için `modules/optimization/**` → red, yoneylem için izin.

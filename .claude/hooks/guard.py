@@ -95,6 +95,11 @@ def main() -> None:
             rel = path.relative_to(root).as_posix()
         except ValueError:
             deny(f"{path} çalışma ağacının ({root}) dışında.")
+        # Ana kökten bakıldığında worktree dosyası ".claude/worktrees/<ad>/..." görünür;
+        # kuralları o worktree köküne göre uygula (worktree içindeki .claude/ yine korunur).
+        wt = re.match(r"\.claude/worktrees/[^/]+/(.+)$", rel)
+        if wt:
+            rel = wt.group(1)
         if rel.startswith(".claude/") or rel == "CLAUDE.md":
             deny("Agent ayarları/CLAUDE.md yalnızca kullanıcı onayıyla orkestratör tarafından değişir.")
         for pat in cfg["write"]:
