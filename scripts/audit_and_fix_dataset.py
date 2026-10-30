@@ -13,7 +13,7 @@ temiz kopya üretir:
    tablolarını JSON ve Markdown rapora yazar.
 4. Sınıf eşleştirmesi yapılandırılabilir (varsayılan: train_yolo26.CLASS_REMAP).
 5. Kapsam dışı (OOS) termal anomali içeren, hedef sınıf kutusu olmayan görüntüleri
-   (Diode/ByPassed/StringOpenCircuit/ReversedPolarity) eğitimden çıkarır. Bölme
+   (Diode/ByPassed/StringOpenCircuit/ReversedPolarity + Electrical Damage) eğitimden çıkarır. Bölme
    TÜM görüntülerle yapılır, filtre bölmeden SONRA uygulanır (aynı sahnenin anomali
    ve hedef kareleri aynı gruba düşer; bkz. ``OOS_DEFAULT_CLASSES``).
    Çıkarılanlar ``--oos-mode`` ile ``oos/`` kümesine yazılır / atılır / valid-test'te korunur.
@@ -32,7 +32,7 @@ Kullanım:
     python scripts/audit_and_fix_dataset.py --out data/ges_clean --overwrite
     python scripts/audit_and_fix_dataset.py --remap-config my_remap.yaml
     python scripts/audit_and_fix_dataset.py --keep-original-classes
-    python scripts/audit_and_fix_dataset.py --hash-thr 8 --ncc-thr 0.90 --ncc-only-thr 0.95
+    python scripts/audit_and_fix_dataset.py --hash-thr 8 --ncc-thr 0.90 --ncc-only-thr 0.93
     python scripts/audit_and_fix_dataset.py --oos-mode keep      # valid/test'te koru
 
 --remap-config YAML biçimi:
@@ -94,11 +94,12 @@ SOURCE_NAMES_FALLBACK = [
 
 # Kapsam dışı (OOS) termal anomali sınıfları (kaynak sınıf adları): remap sonrası hedef kutusu
 # kalmayan ve bunlardan en az birini içeren görüntüler eğitim/değerlendirme arka planından çıkarılır.
-# Electrical Damage BİLEREK listede yok (RGB tarafı, termal anomali değil; alan kararı bekliyor).
-# Non Defective de yok: gerçek "sağlam" arka plandır, korunur.
+# Electrical Damage kullanıcı kararıyla (#6) listeye alındı: hedef kutusu kalmayan ve bu sınıfı
+# içeren görüntüler (Electrical Damage + Non Defective dahil) OOS'a gider.
+# Non Defective listede YOK: tek başına gerçek "sağlam" arka plandır, korunur.
 OOS_DEFAULT_CLASSES = (
     "MultiByPassed", "MultiDiode", "SingleByPassed", "SingleDiode",
-    "StringOpenCircuit", "StringReversedPolarity",
+    "StringOpenCircuit", "StringReversedPolarity", "Electrical Damage",
 )
 OOS_MODES = ("separate", "keep", "drop")
 OOS_DIR = "oos"
@@ -804,7 +805,7 @@ def run(args: argparse.Namespace) -> dict:
 
     # 3) Gruplama
     pairs = find_near_duplicates(hashes, thumbs, args.hash_thr, args.ncc_thr,
-                                 ncc_only_thr=args.ncc_only_thr)
+                                 ncc_only_thr=args.ncc_only_thr if (args.ncc_only_thr or 2) <= 1 else None)
     for r, g in zip(records, build_groups([r.stem for r in records], pairs)):
         r.group = g
     n_groups = max(r.group for r in records) + 1
@@ -987,8 +988,8 @@ def write_oos_md(oos: dict, sizes: dict) -> list[str]:
         f"- Mod: `{oos['mode']}` — bölme tüm görüntülerle yapıldı, filtre bölmeden SONRA uygulandı",
         f"- Çıkarma kümesi (kaynak sınıflar): {', '.join(oos['classes']) or '(boş)'}",
         "- Kural: remap sonrası hedef kutusu kalmayan ve bu sınıflardan birini içeren görüntü. "
-        "Etiketsiz / yalnız Non Defective / Electrical Damage arka planları ve hedef kutusu olan "
-        "karma görüntüler korunur.",
+        "Etiketsiz / yalnız Non Defective arka planları ve hedef kutusu olan karma görüntüler korunur; "
+        "Electrical Damage (+ Non Defective) görüntüleri OOS'a gider.",
         f"- Yazılan: oos={sizes.get('oos', 0)}, atılan (yazılmayan)={sizes.get('dropped', 0)}", "",
         "| Atanmış bölme | gri | RGB | Toplam |", "|---|---:|---:|---:|",
     ]
@@ -1051,7 +1052,7 @@ def write_markdown(report: dict, path: Path) -> None:
         f"- {g['near_duplicate_pairs']} yakın kopya çifti (dHash ≤ {report['params']['hash_thr']}, "
         f"çevirme duyarsız, NCC ≥ {report['params']['ncc_thr']}"
         + (f"; ek NCC-tabanlı aday ≥ {report['params']['ncc_only_thr']}"
-           if report["params"].get("ncc_only_thr") is not None else "")
+           if (report["params"].get("ncc_only_thr") or 2) <= 1 else "")
         + f"); {g['near_duplicate_pairs_cross_stem']} tanesi farklı gövdeler arasında",
         f"- En büyük grup: {g['largest_groups'][0]['size']} görüntü" if g["largest_groups"] else "",
         "",
@@ -1131,9 +1132,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--hash-thr", type=int, default=8, help="dHash Hamming eşiği (aday)")
     p.add_argument("--ncc-thr", type=float, default=0.90,
                    help="Aday çifti kabul için min. küçük resim korelasyonu (-1 = kapalı)")
-    p.add_argument("--ncc-only-thr", type=float, default=None,
+    p.add_argument("--ncc-only-thr", type=float, default=0.93,
                    help="dHash'ten bağımsız ek aday: 32x32 NCC bu değeri aşan çiftler de birleşir "
-                        "(varsayılan: kapalı)")
+                        "(varsayılan: 0.93; kapatmak için 1'den büyük bir değer, ör. 2, verin)")
     p.add_argument("--oos-classes", nargs="*", default=list(OOS_DEFAULT_CLASSES),
                    help="Kapsam dışı termal anomali kaynak sınıfları (ad ya da ID); hedef kutusu "
                         "kalmayan ve bunları içeren görüntüler çıkarılır. Boş liste = kapalı")
