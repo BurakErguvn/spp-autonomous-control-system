@@ -136,3 +136,41 @@ Kod, doküman ve yapılandırma değişiklikleri kronolojik tutulur. Maddeler si
 - `.claude/hooks/log_input.py` (kullanıcı izniyle): `<agent-message`, `<task-notification`, `<system-reminder`, `<side-sessions-event`, `<ci-monitor-event` ile başlayan turlar kaydedilmez; kayıt yolu `CLAUDE_PROJECT_DIR`'den alınır (yoksa `cwd`). Test: agent mesajı → kayıt yok; normal mesaj → kayıt var.
 - `docs/kayit/inputlar.md` (kullanıcı izniyle): hook hatasıyla eklenen 7 kullanıcı-dışı girdi (20:35–21:11, alt agent raporları ve görev bildirimleri) çıkarıldı; iki başlık düzeltildi.
 - Karar (kullanıcı): araştırma dalları main'e merge edildi (`docs/arastirma/veri-seti-genisletme.md`, `docs/arastirma/ariza-maliyetleri.md`); main push edildi.
+
+## 2026-10-30 14:25 — #3 eşik + #6 arka plan çıkarma, tester, PR
+
+- Kod değişmedi (orkestratör). `veri-muhendisi` (Sonnet/high) `claude/sad-margulis-eb217f` worktree'sinde başlatıldı: (1) #3 yakın-kopya varsayılanları `--hash-thr 8 --ncc-thr 0.90`, başarı ölçütü tester metriği (bölmeler arası 24×24 max-NCC ≥0.90; önce test↔train 30/921, valid↔train 27/918); yetersizse seçenek sunacak; (2) #6 kapsam dışı termal anomali içeren arka planların çıkarılması (gruplama/bölme tüm görüntülerle, çıkarma bölme sonrası filtre önerildi).
+- Karar (kullanıcı, #6): valid/test'teki aynı tür görüntüler de çıkarılır ve ayrı `oos` değerlendirme kümesine yazılır (yanlış pozitif oranı ayrıca raporlanacak). Gerekçe: ana valid/test yalnız 3 hedef sınıf + gerçek arka planı ölçer, sahadaki anomalilere verilen yanlış alarm yine ölçülebilir.
+- Not: worktree'de eski hook'un yazdığı commit'lenmemiş `docs/kayit/inputlar.md` değişikliği (2 agent-message girdisi) duruyor; geri alma izin sınıflandırıcısınca reddedildi, agenta commit'e katmaması söylendi.
+- `docs/kayit/inputlar.md`: bu turun başlığı düzeltildi.
+- Kullanıcı worktree'deki eski `docs/kayit/inputlar.md` değişikliğini `git checkout` ile geri aldı; dosya artık temiz.
+
+## 2026-10-30 14:44 — #3/#6 veri-muhendisi sonucu
+
+- Dal `claude/sad-margulis-eb217f`: `2e505fa` feat: `scripts/audit_and_fix_dataset.py` — varsayılan `--hash-thr 8 --ncc-thr 0.90`; yeni `--ncc-only-thr` (dHash'siz NCC adayı, varsayılan kapalı); `ncc_leakage()` bağımsız sızıntı ölçütü; OOS filtresi (`OOS_DEFAULT_CLASSES`, `--oos-classes`, `--oos-mode {separate,keep,drop}`), manifest'e `placed_in`/`oos`/`oos_source_classes`. `2127401` test: +13 test. `d8cbbae` docs: `outputs/reports/dataset_audit.{json,md}`.
+- `data/ges_clean` yeniden üretildi (git dışı): train 5268 / valid 663 / test 704 görüntü, `oos/` 2561 (atanmış bölme 2090/255/216); Ultralytics 0 bozuk. pytest 84 passed, 4 skipped (veri bağıyla 88 passed).
+- OOS kümesi: MultiByPassed, MultiDiode, SingleByPassed, SingleDiode, StringOpenCircuit, StringReversedPolarity; hepsi termal. Gruplama/bölme tüm görüntülerle, filtre bölme sonrası (grup kesişimi 0). `--keep-original-classes` ile 9196 dosyada grup/bölme aynı.
+- Bulgu: 8/0.90 bağımsız ≥0.90 sızıntıyı düşürmüyor (test↔train 31→33, valid↔train 36→42; gürültü ±10). Ardışık kareler çoğunlukla dHash>8. Seçenek: `--ncc-only-thr 0.93` → test↔train 23/0/0, valid↔train 28/0/0 (≥.90/.95/.97), en büyük grup 45; 0.90 → 11/9 ama en büyük grup 223.
+- Bulgu: filtre sonrası arka plan oranı train %30.9 → %4.3 (227/5268); termal negatif neredeyse kalmadı.
+- Açık alan kararları (kullanıcıda): eşik seçimi; Electrical Damage (yalnız RGB, train 24) arka plan kalsın mı; termal negatif azlığı.
+
+## 2026-10-30 14:46 — #3/#6 alan kararları (eşik, negatifler, Electrical Damage)
+
+- Karar (kullanıcı, #3): yakın-kopya varsayılanı `--hash-thr 8 --ncc-thr 0.90 --ncc-only-thr 0.93`. Gerekçe: ≥0.95/0.97 sızıntı 0'a iner, en büyük grup 45'te kalır (0.90'daki 223'lük zincirleme yok).
+- Karar (kullanıcı, #6): termal negatif azlığı (train arka plan %4.3) şimdilik kabul; FP `oos` kümesinde ölçülecek, eğitimde sorun çıkarsa (#8) yeniden ele alınır, issue'ya not edilecek.
+- Karar (kullanıcı, #6): "Electrical Damage" OOS kümesine eklenir (gerçek arıza, "arıza yok" diye öğretilmemeli).
+- veri-muhendisi aynı oturumla sürdürülüyor: varsayılan değişikliği, yeniden üretim, rapor/test güncellemesi.
+- GitHub (katip, Haiku/low): kararlar #3 (issuecomment-6521900346) ve #6'ya (issuecomment-6521900820) yorum olarak işlendi.
+
+## 2026-10-30 14:49 — #3/#6 kararları uygulandı; tester başlatıldı
+
+- Dal `claude/sad-margulis-eb217f`: `f7a4230` feat: `--ncc-only-thr` varsayılanı 0.93, Electrical Damage `OOS_DEFAULT_CLASSES`'ta; `b734990` test; `08ef0c4` docs: `outputs/reports/dataset_audit.{json,md}`. pytest 84 passed, 4 skipped (veri bağıyla 88).
+- `data/ges_clean` yeniden üretildi: train 5337 / valid 640 / test 606 / oos 2613 (toplam 9196); 2799 grup, en büyük 45; Ultralytics 0 bozuk. Arka plan: train %3.6, valid %3.6, test %6.8.
+- `tester` (Sonnet/high) aynı dalda başlatıldı. Gerekçe: veri hattı doğrulaması; matematik/model değişikliği değil.
+
+## 2026-10-30 15:01 — #2/#3/#6 tester PASS, PR #16
+
+- Tester sonucu (Sonnet/high): PASS (koşullu). Dalda `ecfc9db`, `tests/test_audit_dataset_oos_independent.py` eklendi (6 test: OOS üyeliğinin ham etiketlerden bağımsız hesabı, korunan arka planlar, `placed_in`/`split` grup kesişimi, oranlar ve hotspot tabanı, NCC-only eşik altı ve çevirme ikizi). `3dec995`, `outputs/test_reports/issue-2-3.md` 2. tur. Tüm iddialar birebir yeniden üretildi. Yeniden üretim deterministik; `--oos-mode` ve `--keep-original-classes` modlarında 9196/9196 atama aynı. Zincirlemede ilgisiz sahne birleşmesi görülmedi.
+- Bulgular (düşük): (1) 0.90–0.95 NCC aralığında artık sızıntı 15/15/4 (ardışık kareler); (2) `scripts/audit_and_fix_dataset.py:808` `--ncc-only-thr` ≤0 değerleri doğrulanmıyor (`-1` tüm çiftleri birleştirir); (3) gri tozlanma test n=23; (6) `tests/test_audit_dataset_extra.py` içinde Electrical Damage hakkında eski yorum; (7) `.claude/hooks/guard.py:98` worktree yollarını ana köke göre değerlendirip `.claude/` öneki nedeniyle Edit/Write'ı reddediyor.
+- Orkestratör teyidi: `pytest -q tests --ignore=tests/test_gui.py` 86 passed, 8 skipped; main ile çakışma yok (`git merge-tree`).
+- Dal origin'e pushlandı. PR açıldı: https://github.com/BurakErguvn/spp-autonomous-control-system/pull/16 (Closes #2, #3; Refs #6). CI kontrolü yok. Merge kullanıcı onayı bekliyor.
