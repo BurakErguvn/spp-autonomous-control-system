@@ -136,3 +136,9 @@ Kod, doküman ve yapılandırma değişiklikleri kronolojik tutulur. Maddeler si
 - `.claude/hooks/log_input.py` (kullanıcı izniyle): `<agent-message`, `<task-notification`, `<system-reminder`, `<side-sessions-event`, `<ci-monitor-event` ile başlayan turlar kaydedilmez; kayıt yolu `CLAUDE_PROJECT_DIR`'den alınır (yoksa `cwd`). Test: agent mesajı → kayıt yok; normal mesaj → kayıt var.
 - `docs/kayit/inputlar.md` (kullanıcı izniyle): hook hatasıyla eklenen 7 kullanıcı-dışı girdi (20:35–21:11, alt agent raporları ve görev bildirimleri) çıkarıldı; iki başlık düzeltildi.
 - Karar (kullanıcı): araştırma dalları main'e merge edildi (`docs/arastirma/veri-seti-genisletme.md`, `docs/arastirma/ariza-maliyetleri.md`); main push edildi.
+
+## 2026-10-30 15:05 — guard.py: worktree yolları worktree köküne göre değerlendirilsin
+
+- Sorun (PR #16 doğrulamasında tester bildirdi): `.claude/hooks/guard.py` yazma yolunu ana repo köküne göre hesaplıyordu; `.claude/worktrees/<ad>/...` altındaki her dosya `.claude/` önekiyle eşleşip Edit/Write'ta reddediliyordu, alt agentlar kendi worktree'lerinde izinli yollara (`tests/**`, `outputs/test_reports/**` …) yazamıyordu.
+- Değişiklik (`.claude/hooks/guard.py`, kullanıcı izniyle): göreli yol `.claude/worktrees/<ad>/` önekiyle başlıyorsa önek soyulur, `roles.json` kuralları worktree köküne göre uygulanır. Worktree içindeki `.claude/` ve `CLAUDE.md` yine korunur; worktree dizininin kendisi ve `..` ile kaçış reddedilir.
+- Sınama (stdin'e örnek JSON): ana kökte izinli yol → izin; worktree'de izinli yol (cwd ana kök ve worktree) → izin; worktree'de `.claude/hooks/x` ve `CLAUDE.md` → red; tester için `modules/optimization/**` → red, yoneylem için izin.
