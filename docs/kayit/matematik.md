@@ -166,3 +166,16 @@ Kaynak: `docs/arastirma/ariza-maliyetleri.md` (dal `worktree-agent-ac97f9fac39b3
 - Modül değişimi: 0.10 €/Wp (600 Wp → 60 €) + montaj ≈30 € (Köntges, IEA PVPS T13 çalıştayı, 2025-10-23). %100 kayıplı modül ≈1 yılda, %10 kayıplı ≈10 yılda öder.
 - Tespit (Avrupa tipik, Tsanakas 2025): drone IR 450–650 €/MW, 0.4–0.8 sa/MW; drone RGB 250–400 €/MW; saha EL 1500–2500 €/MW, 2–4 sa/MW; I-V 900–1400 €/MW, >4 sa/MW. IEA T13-10:2018: el tipi IR 3.75–5 sa/MW, drone IR 1.25–2.5 sa/MW (fark büyük olasılıkla hazırlık süresi [T]).
 - İşçilik tabanı: 2026 asgari ücret işveren maliyeti ≈39.2–40.9 bin TL/ay, 225 sa/ay ile ≈182 TL/sa (araştırmacı hesabı; koddaki 200 TL/sa yakın, teknisyen ücreti kaynaksız).
+
+## 2026-10-30 14:44 — #3/#6 veri-muhendisi sonucu
+
+- Bağımsız sızıntı ölçütü: $m_i=\max_{j\in B,\,f\in F_4}\langle \hat t_i, f(\hat t_j)\rangle$, $\hat t$ = 24×24 gri, sıfır ortalama, birim norm küçük resim, $F_4$ = 4 çevirme; bölmeler A,B için $\#\{i\in A: m_i\ge\tau\}$, $\tau\in\{0.90,0.95,0.97\}$ (görüntü sayısı). Gruplamadaki 32×32 NCC ve dHash'ten bağımsız.
+- Sonuçlar (test↔train / valid↔train, ≥.90/.95/.97; test 921, valid 918 görüntü): 4/0.85: 31/7/4, 36/8/4 · 8/0.90: 33/3/1, 42/9/2 · 12/0.90: 21/4/1, 26/7/1 · 8/0.90+NCC-only 0.93: 23/0/0, 28/0/0 (en büyük grup 45) · 8/0.90+NCC-only 0.90: 11/0/0, 9/0/0 (en büyük grup 223).
+- Nihai set (8/0.90, OOS filtreli) instance: hotspot 10345/1295/1293 (%80/10/10), mikro_catlak 3218/418/402, tozlanma 4061/455/432. Arka plan oranı train 227/5268 = %4.3 (önce %30.9).
+
+## 2026-10-30 14:49 — #3/#6 kararları uygulandı
+
+- Ayar: dHash ≤8 ∧ NCC$_{32}$ ≥0.90, ya da NCC$_{32}$ ≥0.93 (dHash'siz). 901 çift, 2799 grup, en büyük grup 45.
+- Sızıntı (≥.90/.95/.97): test↔train 15/0/0 (/606), valid↔train 15/0/0 (/640), test↔valid 4/0/0.
+- Instance (train/valid/test): hotspot 10349/1294/1290; mikro_catlak 3236/399/403; tozlanma 4067/409/472. Görüntü oranı train %81.1, valid %9.7, test %9.2: bölme filtreden önce 80/10/10 yapıldığı için.
+- OOS 2613 görüntü (train 2019, valid 280, test 314); bunların 52'si Electrical Damage.

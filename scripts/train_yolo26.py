@@ -40,6 +40,9 @@ SIZE_TO_WEIGHTS: dict[str, str] = {
     "x": "yolo26x.pt",
 }
 
+# Proje sınıf adları (CLASS_REMAP hedef ID sırasıyla)
+CLASS_NAMES: list[str] = ["hotspot", "mikro_catlak", "tozlanma"]
+
 # Sınıf eşleştirme tablosu: orijinal veri seti ID → proje sınıf ID
 # Orijinal: 15 sınıf | Proje: 3 sınıf
 CLASS_REMAP: dict[int, int | None] = {
