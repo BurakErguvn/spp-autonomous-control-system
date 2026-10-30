@@ -231,13 +231,13 @@ SRC_NAMES = [
 ]
 
 
-def test_default_thresholds_are_8_and_090():
+def test_default_thresholds_are_8_090_and_ncc_only_093():
     args = parse_args([])
-    assert (args.hash_thr, args.ncc_thr, args.ncc_only_thr) == (8, 0.90, None)
+    assert (args.hash_thr, args.ncc_thr, args.ncc_only_thr) == (8, 0.90, 0.93)
     assert args.oos_mode == "separate"
     assert tuple(args.oos_classes) == OOS_DEFAULT_CLASSES
     assert "Non Defective" not in OOS_DEFAULT_CLASSES
-    assert "Electrical Damage" not in OOS_DEFAULT_CLASSES
+    assert "Electrical Damage" in OOS_DEFAULT_CLASSES  # kullanıcı kararı (#6)
 
 
 def test_resolve_oos_classes_names_ids_and_unknown():
@@ -255,20 +255,22 @@ def _rec(split: str, classes: list[int]) -> ImageRecord:
     return rec
 
 
-def test_mark_oos_keeps_non_defective_unlabeled_mixed_and_electrical():
+def test_mark_oos_keeps_non_defective_unlabeled_mixed():
     oos_ids = resolve_oos_classes(list(OOS_DEFAULT_CLASSES), SRC_NAMES)
     cases = {
         "diode": _rec("train", [8, 11]),            # yalnız termal anomali → OOS
         "nondef": _rec("train", [4]),               # gerçek arka plan → kalır
         "unlabeled": _rec("train", []),             # etiketsiz → kalır
-        "elec": _rec("train", [3]),                 # Electrical Damage → kalır (alan kararı bekliyor)
+        "elec": _rec("train", [3]),                 # Electrical Damage → OOS (kullanıcı kararı)
+        "elec_nondef": _rec("train", [3, 4]),       # Electrical Damage + Non Defective → OOS
+        "elec_hot": _rec("train", [3, 12]),         # hedef kutusu var → kalır
         "mixed": _rec("train", [12, 8]),            # hotspot + MultiDiode → kalır
         "diode_nondef": _rec("train", [8, 4]),      # anomali + Non Defective → OOS
     }
     mark_oos(list(cases.values()), oos_ids, SRC_NAMES)
     flags = {k: v.is_oos for k, v in cases.items()}
-    assert flags == {"diode": True, "nondef": False, "unlabeled": False, "elec": False,
-                     "mixed": False, "diode_nondef": True}
+    assert flags == {"diode": True, "nondef": False, "unlabeled": False, "elec": True,
+                     "elec_nondef": True, "elec_hot": False, "mixed": False, "diode_nondef": True}
     assert cases["diode"].oos_classes == ("MultiDiode", "SingleDiode")
     # Karma görüntüde anomali sınıfı kayıtlı kalır ama is_oos değil
     assert cases["mixed"].oos_classes == ("MultiDiode",)
@@ -312,7 +314,7 @@ def test_ncc_leakage_counts_flipped_twin_and_ignores_unplaced():
 
 @pytest.fixture()
 def oos_src(tmp_path: Path) -> Path:
-    """Hotspot, MultiDiode (OOS), Non Defective, Electrical Damage, karma ve etiketsiz görüntüler."""
+    """Hotspot, MultiDiode ve Electrical Damage (OOS), Non Defective, karma ve etiketsiz görüntüler."""
     src = tmp_path / "oos_src"
     rng = np.random.default_rng(3)
     cycle = ["9 0.5 0.5 0.2 0.2", "8 0.5 0.5 0.2 0.2", "4 0.5 0.5 0.2 0.2", "3 0.5 0.5 0.2 0.2",
@@ -342,11 +344,11 @@ def test_oos_separate_default_writes_oos_set_and_keeps_split_assignment(oos_src:
     assert _run_oos(oos_src, out, tmp_path / "rs") == 0
     man = _manifest(out)
     oos_rows = [r for r in man if r["oos"] == "1"]
-    assert oos_rows and all(r["oos_source_classes"] == "MultiDiode" for r in oos_rows)
+    assert oos_rows and {r["oos_source_classes"] for r in oos_rows} == {"MultiDiode", "Electrical Damage"}
     assert all(r["placed_in"] == "oos" for r in oos_rows)
     # Atanmış bölme korunur (train grubundan gelenler ayırt edilebilir)
     assert {r["split"] for r in oos_rows} == {"train", "valid", "test"}
-    # Non Defective, Electrical Damage, karma, etiketsiz kalır
+    # Non Defective, karma, etiketsiz kalır; Electrical Damage OOS'a gider
     kept_files = {p.name for sp in ("train", "valid", "test") for p in (out / sp / "images").iterdir()}
     for r in man:
         label_cls = [int(x.split()[0]) for x in
@@ -358,7 +360,7 @@ def test_oos_separate_default_writes_oos_set_and_keeps_split_assignment(oos_src:
             assert r["file"] in kept_files
     nondef = [r for r in man if r["placed_in"] in ("train", "valid", "test") and r["n_rows_source"] == "1"
               and r["n_rows_out"] == "0"]
-    assert nondef, "Non Defective / Electrical Damage arka planları korunmalı"
+    assert nondef, "Non Defective / etiketsiz arka planlar korunmalı"
     n_oos_files = len(list((out / "oos" / "images").iterdir()))
     assert n_oos_files == len(oos_rows)
     # Grup bütünlüğü atanmış bölmeler üzerinden
@@ -437,7 +439,9 @@ def test_real_clean_oos_set_is_separated_and_consistent():
 def test_committed_report_records_thresholds_and_zero_corrupt():
     import json
     rep = json.loads((REPO / "outputs" / "reports" / "dataset_audit.json").read_text(encoding="utf-8"))
-    assert (rep["params"]["hash_thr"], rep["params"]["ncc_thr"]) == (8, 0.90)
+    p = rep["params"]
+    assert (p["hash_thr"], p["ncc_thr"], p["ncc_only_thr"]) == (8, 0.90, 0.93)
+    assert "Electrical Damage" in p["oos_classes"]
     assert rep["leakage_after"]["groups_spanning_multiple_splits"] == 0
     assert rep["ultralytics_verify"]["total_corrupt"] == 0
     assert rep["oos"]["removed_total"]["train"] > 0
