@@ -9,9 +9,20 @@
       0.1
     ],
     "seed": 42,
-    "hash_thr": 4,
-    "ncc_thr": 0.85,
-    "gray_thr": 1.0
+    "hash_thr": 8,
+    "ncc_thr": 0.9,
+    "ncc_only_thr": null,
+    "gray_thr": 1.0,
+    "oos_mode": "separate",
+    "oos_classes": [
+      "MultiByPassed",
+      "MultiDiode",
+      "SingleByPassed",
+      "SingleDiode",
+      "StringOpenCircuit",
+      "StringReversedPolarity"
+    ],
+    "keep_original_classes": false
   },
   "taxonomy": {
     "names": [
@@ -87,50 +98,36 @@
   "grouping": {
     "images": 9196,
     "source_stems": 3115,
-    "near_duplicate_pairs": 645,
-    "near_duplicate_pairs_cross_stem": 401,
-    "groups": 2838,
+    "near_duplicate_pairs": 753,
+    "near_duplicate_pairs_cross_stem": 398,
+    "groups": 2850,
     "group_size_hist": {
-      "1": 411,
-      "2": 18,
-      "3": 1957,
-      "4": 95,
-      "5": 14,
-      "6": 250,
+      "1": 409,
+      "2": 19,
+      "3": 1959,
+      "4": 97,
+      "5": 15,
+      "6": 261,
       "7": 29,
       "8": 3,
       "9": 33,
-      "10": 9,
-      "11": 3,
-      "12": 3,
+      "10": 8,
+      "11": 2,
+      "12": 4,
       "13": 5,
       "14": 1,
       "15": 1,
-      "16": 2,
+      "16": 1,
       "17": 1,
-      "18": 2,
-      "66": 1
+      "18": 1,
+      "24": 1
     },
     "largest_groups": [
       {
-        "size": 66,
+        "size": 24,
         "stems": [
-          "210915_Hangchon_33m_211015_00036_JPG_jpg",
-          "210915_Hangchon_33m_211015_00053_JPG_jpg",
-          "210915_Hangchon_33m_211015_00131_JPG_jpg",
-          "210915_Hangchon_33m_211015_00134_JPG_jpg",
-          "210915_Hangchon_33m_211015_00135_JPG_jpg",
-          "210915_Hangchon_33m_211015_00135_JPG_jpg-dfb6b8c1f60562daac1da937904f0ed_jpg",
-          "210915_Hangchon_33m_211015_00140_JPG_jpg",
-          "210915_Hangchon_33m_211015_00180_JPG_jpg",
-          "210915_Hangchon_33m_211015_00201_JPG_jpg",
-          "210915_Hangchon_33m_211015_00213_JPG_jpg"
-        ]
-      },
-      {
-        "size": 18,
-        "stems": [
-          "210915_Hangchon_33m_211015_00113_JPG_jpg",
+          "210915_Hangchon_33m_211015_00086_JPG_jpg",
+          "210915_Hangchon_33m_211015_00630_JPG_jpg",
           "210915_Hangchon_33m_211015_00637_JPG_jpg",
           "210915_Hangchon_33m_211015_00845_JPG_jpg"
         ]
@@ -138,10 +135,10 @@
       {
         "size": 18,
         "stems": [
-          "210915_Hangchon_33m_211015_00677_JPG_jpg",
-          "210915_Hangchon_33m_211015_00801_JPG_jpg",
-          "210915_Hangchon_33m_211015_00809_JPG_jpg",
-          "210915_Hangchon_33m_211015_00881_JPG_jpg"
+          "210915_Hangchon_33m_211015_00134_JPG_jpg",
+          "210915_Hangchon_33m_211015_00135_JPG_jpg",
+          "210915_Hangchon_33m_211015_00135_JPG_jpg-dfb6b8c1f60562daac1da937904f0ed_jpg",
+          "210915_Hangchon_33m_211015_00201_JPG_jpg"
         ]
       },
       {
@@ -159,10 +156,16 @@
       {
         "size": 16,
         "stems": [
-          "Dusty_186_jpg",
-          "Dusty_187_jpg",
-          "Dusty_189_jpg",
-          "Dusty_46_jpg"
+          "Physical_Damge_119_jpg",
+          "Physical_Damge_120_jpg",
+          "Physical_Damge_147_jpg",
+          "Physical_Damge_148_jpg"
+        ]
+      },
+      {
+        "size": 15,
+        "stems": [
+          "210915_Hangchon_33m_211015_00065_JPG_jpg"
         ]
       }
     ]
@@ -180,9 +183,9 @@
     },
     "groups_spanning_multiple_splits": 171,
     "near_duplicate_pairs_across_splits": {
-      "test-train": 56,
+      "test-train": 55,
       "test-valid": 15,
-      "train-valid": 114
+      "train-valid": 125
     },
     "test_images_with_train_twin": 45,
     "test_images": 93
@@ -201,12 +204,262 @@
     "groups_spanning_multiple_splits": 0,
     "near_duplicate_pairs_across_splits": {},
     "test_images_with_train_twin": 0,
-    "test_images": 921
+    "test_images": 920
+  },
+  "ncc_leakage_before": {
+    "test-train": {
+      "images": 93,
+      "ge_0.90": 36,
+      "ge_0.95": 31,
+      "ge_0.97": 31
+    },
+    "valid-train": {
+      "images": 553,
+      "ge_0.90": 118,
+      "ge_0.95": 89,
+      "ge_0.97": 84
+    },
+    "test-valid": {
+      "images": 93,
+      "ge_0.90": 13,
+      "ge_0.95": 12,
+      "ge_0.97": 12
+    }
+  },
+  "ncc_leakage_after": {
+    "test-train": {
+      "images": 704,
+      "ge_0.90": 20,
+      "ge_0.95": 2,
+      "ge_0.97": 0
+    },
+    "valid-train": {
+      "images": 663,
+      "ge_0.90": 27,
+      "ge_0.95": 2,
+      "ge_0.97": 1
+    },
+    "test-valid": {
+      "images": 704,
+      "ge_0.90": 7,
+      "ge_0.95": 0,
+      "ge_0.97": 0
+    }
+  },
+  "ncc_leakage_assigned": {
+    "test-train": {
+      "images": 920,
+      "ge_0.90": 33,
+      "ge_0.95": 3,
+      "ge_0.97": 1
+    },
+    "valid-train": {
+      "images": 918,
+      "ge_0.90": 42,
+      "ge_0.95": 9,
+      "ge_0.97": 2
+    },
+    "test-valid": {
+      "images": 920,
+      "ge_0.90": 8,
+      "ge_0.95": 0,
+      "ge_0.97": 0
+    }
   },
   "split_sizes": {
-    "train": 7357,
-    "valid": 918,
-    "test": 921
+    "train": 5268,
+    "valid": 663,
+    "test": 704,
+    "oos": 2561,
+    "dropped": 0
+  },
+  "oos": {
+    "mode": "separate",
+    "classes": [
+      "MultiByPassed",
+      "MultiDiode",
+      "SingleByPassed",
+      "SingleDiode",
+      "StringOpenCircuit",
+      "StringReversedPolarity"
+    ],
+    "removed_images": {
+      "train": {
+        "gray": 2090,
+        "rgb": 0
+      },
+      "valid": {
+        "gray": 255,
+        "rgb": 0
+      },
+      "test": {
+        "gray": 216,
+        "rgb": 0
+      }
+    },
+    "removed_total": {
+      "train": 2090,
+      "valid": 255,
+      "test": 216
+    },
+    "removed_by_source_class": {
+      "SingleByPassed": {
+        "train": {
+          "gray": 1018,
+          "rgb": 0
+        },
+        "valid": {
+          "gray": 119,
+          "rgb": 0
+        },
+        "test": {
+          "gray": 117,
+          "rgb": 0
+        }
+      },
+      "SingleDiode": {
+        "train": {
+          "gray": 451,
+          "rgb": 0
+        },
+        "valid": {
+          "gray": 61,
+          "rgb": 0
+        },
+        "test": {
+          "gray": 60,
+          "rgb": 0
+        }
+      },
+      "StringOpenCircuit": {
+        "train": {
+          "gray": 421,
+          "rgb": 0
+        },
+        "valid": {
+          "gray": 66,
+          "rgb": 0
+        },
+        "test": {
+          "gray": 12,
+          "rgb": 0
+        }
+      },
+      "MultiByPassed": {
+        "train": {
+          "gray": 182,
+          "rgb": 0
+        },
+        "valid": {
+          "gray": 27,
+          "rgb": 0
+        },
+        "test": {
+          "gray": 16,
+          "rgb": 0
+        }
+      },
+      "MultiDiode": {
+        "train": {
+          "gray": 255,
+          "rgb": 0
+        },
+        "valid": {
+          "gray": 31,
+          "rgb": 0
+        },
+        "test": {
+          "gray": 27,
+          "rgb": 0
+        }
+      },
+      "StringReversedPolarity": {
+        "train": {
+          "gray": 65,
+          "rgb": 0
+        },
+        "valid": {
+          "gray": 7,
+          "rgb": 0
+        },
+        "test": {
+          "gray": 8,
+          "rgb": 0
+        }
+      }
+    },
+    "retained_empty_background": {
+      "(etiketsiz)": {
+        "train": {
+          "gray": 4,
+          "rgb": 0
+        },
+        "valid": {
+          "gray": 0,
+          "rgb": 0
+        },
+        "test": {
+          "gray": 3,
+          "rgb": 0
+        }
+      },
+      "Non Defective": {
+        "train": {
+          "gray": 4,
+          "rgb": 180
+        },
+        "valid": {
+          "gray": 0,
+          "rgb": 31
+        },
+        "test": {
+          "gray": 0,
+          "rgb": 35
+        }
+      },
+      "Electrical Damage+Non Defective": {
+        "train": {
+          "gray": 0,
+          "rgb": 15
+        },
+        "valid": {
+          "gray": 0,
+          "rgb": 3
+        },
+        "test": {
+          "gray": 0,
+          "rgb": 3
+        }
+      },
+      "Electrical Damage": {
+        "train": {
+          "gray": 6,
+          "rgb": 18
+        },
+        "valid": {
+          "gray": 0,
+          "rgb": 3
+        },
+        "test": {
+          "gray": 0,
+          "rgb": 4
+        }
+      }
+    },
+    "mixed_images": {
+      "train": {
+        "images_with_oos_boxes": 1095,
+        "images_with_any_unmapped_boxes": 1419
+      },
+      "valid": {
+        "images_with_oos_boxes": 142,
+        "images_with_any_unmapped_boxes": 183
+      },
+      "test": {
+        "images_with_oos_boxes": 147,
+        "images_with_any_unmapped_boxes": 180
+      }
+    }
   },
   "images_before": {
     "images": {
@@ -237,26 +490,26 @@
   "images_after": {
     "images": {
       "gray": {
-        "train": 6372,
-        "valid": 796,
-        "test": 798
+        "train": 4284,
+        "valid": 541,
+        "test": 580
       },
       "rgb": {
-        "train": 985,
+        "train": 984,
         "valid": 122,
-        "test": 123
+        "test": 124
       }
     },
     "background_images": {
       "gray": {
-        "train": 2055,
-        "valid": 258,
-        "test": 265
+        "train": 14,
+        "valid": 0,
+        "test": 3
       },
       "rgb": {
-        "train": 216,
-        "valid": 49,
-        "test": 27
+        "train": 213,
+        "valid": 37,
+        "test": 42
       }
     }
   },
@@ -342,9 +595,9 @@
     "instances": {
       "hotspot": {
         "gray": {
-          "train": 10348,
-          "valid": 1294,
-          "test": 1291
+          "train": 10345,
+          "valid": 1295,
+          "test": 1293
         },
         "rgb": {
           "train": 0,
@@ -354,35 +607,35 @@
       },
       "mikro_catlak": {
         "gray": {
-          "train": 1325,
-          "valid": 190,
-          "test": 145
+          "train": 1401,
+          "valid": 136,
+          "test": 123
         },
         "rgb": {
-          "train": 1898,
-          "valid": 215,
-          "test": 265
+          "train": 1817,
+          "valid": 282,
+          "test": 279
         }
       },
       "tozlanma": {
         "gray": {
-          "train": 53,
-          "valid": 11,
-          "test": 1
+          "train": 41,
+          "valid": 13,
+          "test": 11
         },
         "rgb": {
-          "train": 3978,
-          "valid": 441,
-          "test": 464
+          "train": 4020,
+          "valid": 442,
+          "test": 421
         }
       }
     },
     "images": {
       "hotspot": {
         "gray": {
-          "train": 3795,
-          "valid": 477,
-          "test": 499
+          "train": 3730,
+          "valid": 501,
+          "test": 540
         },
         "rgb": {
           "train": 0,
@@ -392,26 +645,26 @@
       },
       "mikro_catlak": {
         "gray": {
-          "train": 508,
-          "valid": 58,
+          "train": 529,
+          "valid": 37,
           "test": 34
         },
         "rgb": {
-          "train": 468,
-          "valid": 51,
-          "test": 72
+          "train": 466,
+          "valid": 60,
+          "test": 65
         }
       },
       "tozlanma": {
         "gray": {
-          "train": 29,
-          "valid": 3,
-          "test": 1
+          "train": 26,
+          "valid": 4,
+          "test": 3
         },
         "rgb": {
-          "train": 488,
-          "valid": 40,
-          "test": 62
+          "train": 492,
+          "valid": 44,
+          "test": 54
         }
       }
     }
@@ -421,37 +674,37 @@
       "Bird Drop": {
         "gray": {
           "train": 3,
-          "valid": 11,
-          "test": 0
+          "valid": 0,
+          "test": 11
         },
         "rgb": {
-          "train": 1638,
-          "valid": 150,
-          "test": 140
+          "train": 1623,
+          "valid": 171,
+          "test": 134
         }
       },
       "Defective": {
         "gray": {
-          "train": 309,
-          "valid": 49,
-          "test": 33
+          "train": 331,
+          "valid": 28,
+          "test": 32
         },
         "rgb": {
-          "train": 1323,
-          "valid": 156,
-          "test": 172
+          "train": 1294,
+          "valid": 192,
+          "test": 165
         }
       },
       "Dusty": {
         "gray": {
-          "train": 45,
-          "valid": 0,
-          "test": 1
+          "train": 33,
+          "valid": 13,
+          "test": 0
         },
         "rgb": {
-          "train": 1393,
-          "valid": 180,
-          "test": 179
+          "train": 1409,
+          "valid": 161,
+          "test": 182
         }
       },
       "Electrical Damage": {
@@ -462,32 +715,32 @@
         },
         "rgb": {
           "train": 361,
-          "valid": 47,
-          "test": 51
+          "valid": 48,
+          "test": 50
         }
       },
       "Non Defective": {
         "gray": {
-          "train": 19,
-          "valid": 7,
-          "test": 3
+          "train": 26,
+          "valid": 3,
+          "test": 0
         },
         "rgb": {
-          "train": 3037,
-          "valid": 361,
-          "test": 372
+          "train": 2998,
+          "valid": 370,
+          "test": 402
         }
       },
       "Physical Damage": {
         "gray": {
-          "train": 1061,
-          "valid": 145,
-          "test": 112
+          "train": 1117,
+          "valid": 110,
+          "test": 91
         },
         "rgb": {
-          "train": 577,
-          "valid": 59,
-          "test": 93
+          "train": 525,
+          "valid": 90,
+          "test": 114
         }
       },
       "Snow": {
@@ -497,16 +750,16 @@
           "test": 0
         },
         "rgb": {
-          "train": 947,
-          "valid": 111,
-          "test": 145
+          "train": 988,
+          "valid": 110,
+          "test": 105
         }
       },
       "MultiByPassed": {
         "gray": {
-          "train": 313,
-          "valid": 39,
-          "test": 39
+          "train": 93,
+          "valid": 8,
+          "test": 17
         },
         "rgb": {
           "train": 0,
@@ -516,9 +769,9 @@
       },
       "MultiDiode": {
         "gray": {
-          "train": 836,
-          "valid": 104,
-          "test": 107
+          "train": 302,
+          "valid": 43,
+          "test": 66
         },
         "rgb": {
           "train": 0,
@@ -528,9 +781,9 @@
       },
       "MultiHotSpot": {
         "gray": {
-          "train": 4239,
-          "valid": 528,
-          "test": 530
+          "train": 4236,
+          "valid": 530,
+          "test": 531
         },
         "rgb": {
           "train": 0,
@@ -540,9 +793,9 @@
       },
       "SingleByPassed": {
         "gray": {
-          "train": 2601,
-          "valid": 325,
-          "test": 326
+          "train": 904,
+          "valid": 101,
+          "test": 138
         },
         "rgb": {
           "train": 0,
@@ -552,9 +805,9 @@
       },
       "SingleDiode": {
         "gray": {
-          "train": 1587,
-          "valid": 197,
-          "test": 198
+          "train": 833,
+          "valid": 122,
+          "test": 82
         },
         "rgb": {
           "train": 0,
@@ -565,8 +818,8 @@
       "SingleHotSpot": {
         "gray": {
           "train": 6109,
-          "valid": 766,
-          "test": 761
+          "valid": 765,
+          "test": 762
         },
         "rgb": {
           "train": 0,
@@ -576,9 +829,9 @@
       },
       "StringOpenCircuit": {
         "gray": {
-          "train": 1028,
-          "valid": 118,
-          "test": 120
+          "train": 169,
+          "valid": 29,
+          "test": 3
         },
         "rgb": {
           "train": 0,
@@ -588,9 +841,9 @@
       },
       "StringReversedPolarity": {
         "gray": {
-          "train": 99,
-          "valid": 12,
-          "test": 13
+          "train": 28,
+          "valid": 5,
+          "test": 4
         },
         "rgb": {
           "train": 0,
@@ -603,37 +856,37 @@
       "Bird Drop": {
         "gray": {
           "train": 3,
-          "valid": 3,
-          "test": 0
+          "valid": 0,
+          "test": 3
         },
         "rgb": {
-          "train": 141,
-          "valid": 13,
-          "test": 30
+          "train": 145,
+          "valid": 15,
+          "test": 24
         }
       },
       "Defective": {
         "gray": {
-          "train": 289,
-          "valid": 48,
-          "test": 33
+          "train": 314,
+          "valid": 28,
+          "test": 28
         },
         "rgb": {
-          "train": 399,
-          "valid": 51,
-          "test": 64
+          "train": 400,
+          "valid": 49,
+          "test": 65
         }
       },
       "Dusty": {
         "gray": {
-          "train": 25,
-          "valid": 0,
-          "test": 1
+          "train": 22,
+          "valid": 4,
+          "test": 0
         },
         "rgb": {
-          "train": 258,
-          "valid": 20,
-          "test": 24
+          "train": 265,
+          "valid": 15,
+          "test": 22
         }
       },
       "Electrical Damage": {
@@ -643,33 +896,33 @@
           "test": 0
         },
         "rgb": {
-          "train": 137,
-          "valid": 29,
-          "test": 16
+          "train": 134,
+          "valid": 22,
+          "test": 26
         }
       },
       "Non Defective": {
         "gray": {
-          "train": 13,
-          "valid": 3,
-          "test": 1
+          "train": 16,
+          "valid": 1,
+          "test": 0
         },
         "rgb": {
-          "train": 406,
-          "valid": 57,
-          "test": 61
+          "train": 410,
+          "valid": 58,
+          "test": 56
         }
       },
       "Physical Damage": {
         "gray": {
-          "train": 505,
-          "valid": 55,
+          "train": 523,
+          "valid": 37,
           "test": 34
         },
         "rgb": {
-          "train": 196,
-          "valid": 14,
-          "test": 23
+          "train": 193,
+          "valid": 25,
+          "test": 15
         }
       },
       "Snow": {
@@ -679,16 +932,16 @@
           "test": 0
         },
         "rgb": {
-          "train": 117,
-          "valid": 7,
+          "train": 110,
+          "valid": 14,
           "test": 9
         }
       },
       "MultiByPassed": {
         "gray": {
-          "train": 270,
-          "valid": 36,
-          "test": 32
+          "train": 93,
+          "valid": 8,
+          "test": 12
         },
         "rgb": {
           "train": 0,
@@ -698,9 +951,9 @@
       },
       "MultiDiode": {
         "gray": {
-          "train": 440,
-          "valid": 64,
-          "test": 55
+          "train": 172,
+          "valid": 28,
+          "test": 46
         },
         "rgb": {
           "train": 0,
@@ -710,9 +963,9 @@
       },
       "MultiHotSpot": {
         "gray": {
-          "train": 2469,
-          "valid": 314,
-          "test": 326
+          "train": 2467,
+          "valid": 307,
+          "test": 335
         },
         "rgb": {
           "train": 0,
@@ -722,9 +975,9 @@
       },
       "SingleByPassed": {
         "gray": {
-          "train": 1506,
-          "valid": 208,
-          "test": 189
+          "train": 527,
+          "valid": 56,
+          "test": 66
         },
         "rgb": {
           "train": 0,
@@ -734,9 +987,9 @@
       },
       "SingleDiode": {
         "gray": {
-          "train": 908,
-          "valid": 114,
-          "test": 118
+          "train": 427,
+          "valid": 73,
+          "test": 68
         },
         "rgb": {
           "train": 0,
@@ -746,9 +999,9 @@
       },
       "SingleHotSpot": {
         "gray": {
-          "train": 2015,
-          "valid": 261,
-          "test": 273
+          "train": 1981,
+          "valid": 278,
+          "test": 290
         },
         "rgb": {
           "train": 0,
@@ -758,9 +1011,9 @@
       },
       "StringOpenCircuit": {
         "gray": {
-          "train": 480,
-          "valid": 61,
-          "test": 82
+          "train": 103,
+          "valid": 18,
+          "test": 3
         },
         "rgb": {
           "train": 0,
@@ -770,9 +1023,9 @@
       },
       "StringReversedPolarity": {
         "gray": {
-          "train": 90,
-          "valid": 11,
-          "test": 9
+          "train": 21,
+          "valid": 5,
+          "test": 4
         },
         "rgb": {
           "train": 0,
@@ -785,7 +1038,7 @@
   "min_test_check": {
     "hotspot": {
       "required": 300,
-      "actual": 1291,
+      "actual": 1293,
       "ok": true
     }
   },
@@ -794,33 +1047,33 @@
     "ultralytics_version": "8.4.41",
     "splits": {
       "train": {
-        "images": 7357,
+        "images": 5268,
         "missing": 0,
-        "found": 7357,
-        "empty": 2271,
+        "found": 5268,
+        "empty": 227,
         "corrupt": 0,
         "with_segments": 0,
-        "instances": 17602,
+        "instances": 17624,
         "messages": []
       },
       "valid": {
-        "images": 918,
+        "images": 663,
         "missing": 0,
-        "found": 918,
-        "empty": 307,
+        "found": 663,
+        "empty": 37,
         "corrupt": 0,
         "with_segments": 0,
-        "instances": 2151,
+        "instances": 2168,
         "messages": []
       },
       "test": {
-        "images": 921,
+        "images": 704,
         "missing": 0,
-        "found": 921,
-        "empty": 292,
+        "found": 704,
+        "empty": 45,
         "corrupt": 0,
         "with_segments": 0,
-        "instances": 2166,
+        "instances": 2127,
         "messages": []
       }
     },
