@@ -12,7 +12,12 @@ temiz kopya üretir:
 3. Modaliteyi (gri/termal ↔ renkli/RGB) tespit eder; sınıf × modalite × bölme
    tablolarını JSON ve Markdown rapora yazar.
 4. Sınıf eşleştirmesi yapılandırılabilir (varsayılan: train_yolo26.CLASS_REMAP).
-5. Temiz veri seti için yeni data YAML yazar ve (varsa) Ultralytics
+5. Kapsam dışı (OOS) termal anomali içeren, hedef sınıf kutusu olmayan görüntüleri
+   (Diode/ByPassed/StringOpenCircuit/ReversedPolarity) eğitimden çıkarır. Bölme
+   TÜM görüntülerle yapılır, filtre bölmeden SONRA uygulanır (aynı sahnenin anomali
+   ve hedef kareleri aynı gruba düşer; bkz. ``OOS_DEFAULT_CLASSES``).
+   Çıkarılanlar ``--oos-mode`` ile ``oos/`` kümesine yazılır / atılır / valid-test'te korunur.
+6. Temiz veri seti için yeni data YAML yazar ve (varsa) Ultralytics
    ``verify_image_label`` ile her görüntü/etiket çiftini doğrular.
 
 Kaynak etiketler: ``labels/*.txt.orig`` varsa o (orijinal 15 sınıf) okunur,
@@ -27,6 +32,8 @@ Kullanım:
     python scripts/audit_and_fix_dataset.py --out data/ges_clean --overwrite
     python scripts/audit_and_fix_dataset.py --remap-config my_remap.yaml
     python scripts/audit_and_fix_dataset.py --keep-original-classes
+    python scripts/audit_and_fix_dataset.py --hash-thr 8 --ncc-thr 0.90 --ncc-only-thr 0.95
+    python scripts/audit_and_fix_dataset.py --oos-mode keep      # valid/test'te koru
 
 --remap-config YAML biçimi:
     names: [hotspot, mikro_catlak, tozlanma]
@@ -38,7 +45,8 @@ Kullanım:
 
 Çıktı:
     data/ges_clean/{train,valid,test}/{images,labels}
-    data/ges_clean/manifest.csv          — görüntü → grup/bölme/modalite
+    data/ges_clean/oos/{images,labels}   — çıkarılan kapsam dışı arka planlar (--oos-mode separate)
+    data/ges_clean/manifest.csv          — görüntü → grup/bölme/yerleşim/modalite/OOS kaynak sınıfları
     data/ges_clean.yaml                  — Ultralytics data YAML
     outputs/reports/dataset_audit.json   — denetim raporu
     outputs/reports/dataset_audit.md     — rapor özeti
@@ -84,6 +92,19 @@ SOURCE_NAMES_FALLBACK = [
     "StringReversedPolarity",
 ]
 
+# Kapsam dışı (OOS) termal anomali sınıfları (kaynak sınıf adları): remap sonrası hedef kutusu
+# kalmayan ve bunlardan en az birini içeren görüntüler eğitim/değerlendirme arka planından çıkarılır.
+# Electrical Damage BİLEREK listede yok (RGB tarafı, termal anomali değil; alan kararı bekliyor).
+# Non Defective de yok: gerçek "sağlam" arka plandır, korunur.
+OOS_DEFAULT_CLASSES = (
+    "MultiByPassed", "MultiDiode", "SingleByPassed", "SingleDiode",
+    "StringOpenCircuit", "StringReversedPolarity",
+)
+OOS_MODES = ("separate", "keep", "drop")
+OOS_DIR = "oos"
+# Bölmeler arası küçük-resim NCC sızıntı ölçümü
+EVAL_THUMB_SIZE = 24
+NCC_LEAK_THRESHOLDS = (0.90, 0.95, 0.97)
 # Bbox kenarı bundan küçükse (normalize) dejenere kabul edilir
 MIN_BOX_SIZE = 1e-4
 # Bayt başına bit sayısı — Hamming mesafesi için
@@ -229,13 +250,16 @@ def chroma_score(bgr: np.ndarray) -> float:
     return float((np.abs(b - g).mean() + np.abs(g - r).mean() + np.abs(b - r).mean()) / 3)
 
 
-def image_features(path: Path) -> tuple[float, np.ndarray, np.ndarray]:
-    """(chroma, dhash_variants, thumbnail) döndürür."""
+def image_features(path: Path) -> tuple[float, np.ndarray, np.ndarray, np.ndarray]:
+    """(chroma, dhash_variants, thumbnail32, eval_thumbnail24) döndürür.
+
+    İlk üçü gruplama içindir; 24x24 küçük resim yalnız bağımsız sızıntı ölçümünde kullanılır.
+    """
     bgr = cv2.imread(str(path), cv2.IMREAD_COLOR)
     if bgr is None:
         raise ValueError(f"Görüntü okunamadı: {path}")
     gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
-    return chroma_score(bgr), dhash_variants(gray), thumbnail(gray)
+    return chroma_score(bgr), dhash_variants(gray), thumbnail(gray), thumbnail(gray, EVAL_THUMB_SIZE)
 
 
 # ── Gruplama ─────────────────────────────────────────────────────────────────
@@ -265,6 +289,7 @@ def find_near_duplicates(
     hash_thr: int,
     ncc_thr: float,
     block: int = 256,
+    ncc_only_thr: float | None = None,
 ) -> list[tuple[int, int, int, float]]:
     """dHash (çevirme duyarsız) + NCC ile yakın kopya çiftlerini bulur.
 
@@ -274,6 +299,8 @@ def find_near_duplicates(
         hash_thr: Maksimum Hamming mesafesi (aday eşiği).
         ncc_thr: Adayı kabul etmek için minimum korelasyon. ``<= -1`` ise
             doğrulama yapılmaz (salt dHash).
+        ncc_only_thr: Verilirse dHash'e bakmadan NCC'si (4 çevirme, en iyisi) bu
+            değerin üstündeki çiftler de eklenir (dHash'in kaçırdığı ardışık kareler).
 
     Returns:
         (i, j, hamming, ncc) listesi, i < j.
@@ -295,6 +322,7 @@ def find_near_duplicates(
         dist = _POPCOUNT[xor].sum(-1, dtype=np.int16)
         best_flip = dist.argmin(-1)
         best = dist.min(-1)
+        accepted: set[tuple[int, int]] = set()
         for bi, j in zip(*np.nonzero(best <= hash_thr)):
             i = start + int(bi)
             if j <= i:
@@ -303,6 +331,15 @@ def find_near_duplicates(
             ncc = float(flat_thumbs[i] @ flipped[f][j].reshape(-1))
             if ncc >= ncc_thr:
                 pairs.append((i, int(j), int(best[bi, j]), ncc))
+                accepted.add((i, int(j)))
+        if ncc_only_thr is not None:
+            ncc_best = np.max(
+                [flat_thumbs[start:stop] @ ft.reshape(n, -1).T for ft in flipped], axis=0)
+            for bi, j in zip(*np.nonzero(ncc_best >= ncc_only_thr)):
+                i = start + int(bi)
+                if j <= i or (i, int(j)) in accepted:
+                    continue
+                pairs.append((i, int(j), int(best[bi, j]), float(ncc_best[bi, j])))
     return pairs
 
 
@@ -386,6 +423,9 @@ class ImageRecord:
     group: int = -1
     split: str = ""
     out_rows: list[LabelRow] = field(default_factory=list)
+    oos_classes: tuple[str, ...] = ()   # çıkarma kümesindeki kaynak sınıf adları (varsa)
+    is_oos: bool = False                # hedef kutusu yok + OOS sınıfı var
+    placed_in: str = ""                 # train/valid/test/oos/(boş = yazılmadı)
 
 
 def load_source_names(src: Path) -> list[str]:
@@ -538,6 +578,125 @@ def mixed_file_stats(records: list[ImageRecord], remap: dict[int, int | None],
     return out
 
 
+def ncc_leakage(thumbs: np.ndarray, split_of: list[str],
+                thresholds: tuple[float, ...] = NCC_LEAK_THRESHOLDS) -> dict:
+    """Bölmeler arası küçük-resim NCC sızıntısı (gruplamadan bağımsız ölçüt).
+
+    Her (a, b) bölme çifti için a'daki her görüntünün b'deki en benzer görüntüyle
+    (4 çevirme üzerinden) max-NCC değeri hesaplanır; eşiği aşan a-görüntüleri sayılır.
+    Gruplamada 32x32 küçük resim kullanıldığı için bu ölçüt (24x24) ondan bağımsızdır.
+
+    Args:
+        thumbs: (N, S, S) sıfır ortalamalı birim normlu küçük resimler.
+        split_of: Her görüntünün bölmesi; ``""`` olanlar (yazılmayanlar) hariç tutulur.
+        thresholds: Sayılacak NCC eşikleri.
+
+    Returns:
+        {"test-train": {"images": n_test, "ge_0.90": k, ...}, ...}
+    """
+    n = len(thumbs)
+    flat = thumbs.reshape(n, -1)
+    variants = [flat] + [
+        t.reshape(n, -1) for t in (thumbs[:, :, ::-1], thumbs[:, ::-1, :], thumbs[:, ::-1, ::-1])
+    ]
+    split_arr = np.asarray(split_of)
+    out: dict = {}
+    for a, b in (("test", "train"), ("valid", "train"), ("test", "valid")):
+        ia, ib = np.where(split_arr == a)[0], np.where(split_arr == b)[0]
+        best = np.full(len(ia), -1.0)
+        if len(ia) and len(ib):
+            for v in variants:
+                best = np.maximum(best, (flat[ia] @ v[ib].T).max(1))
+        out[f"{a}-{b}"] = {"images": int(len(ia)),
+                           **{f"ge_{t:.2f}": int((best >= t).sum()) for t in thresholds}}
+    return out
+
+
+def resolve_oos_classes(items: list[str], source_names: list[str]) -> set[int]:
+    """Kaynak sınıf adları (ya da sayısal ID'ler) → kaynak sınıf ID kümesi."""
+    by_name = {n.lower(): i for i, n in enumerate(source_names)}
+    ids: set[int] = set()
+    for it in items:
+        if it.lstrip("-").isdigit():
+            ids.add(int(it))
+        elif it.lower() in by_name:
+            ids.add(by_name[it.lower()])
+        else:
+            raise ValueError(f"--oos-classes: bilinmeyen kaynak sınıf '{it}' (kaynak: {source_names})")
+    return ids
+
+
+def mark_oos(records: list[ImageRecord], oos_ids: set[int], source_names: list[str]) -> None:
+    """Hedef kutusu kalmayan ve OOS sınıfı içeren görüntüleri işaretler.
+
+    Gerçek arka planlar (etiketsiz / yalnız Non Defective vb.) ve hedef kutusu
+    olan karma görüntüler işaretlenmez.
+    """
+    for r in records:
+        found = sorted({source_names[row.cls] if row.cls < len(source_names) else str(row.cls)
+                        for row in r.rows if row.cls in oos_ids})
+        r.oos_classes = tuple(found)
+        r.is_oos = bool(found) and not r.out_rows
+
+
+def place_records(records: list[ImageRecord], oos_mode: str) -> None:
+    """Her kaydın yazılacağı yeri belirler (train/valid/test/oos ya da '' = yazılmaz).
+
+    separate: OOS görüntüler (tüm atanmış bölmelerden) ``oos/`` kümesine gider.
+    drop:     OOS görüntüler hiçbir yere yazılmaz.
+    keep:     valid/test'teki OOS görüntüler yerinde kalır, train'dekiler çıkarılır (yazılmaz).
+    """
+    if oos_mode not in OOS_MODES:
+        raise ValueError(f"oos_mode {oos_mode!r} geçersiz; seçenekler: {OOS_MODES}")
+    for r in records:
+        if not r.is_oos:
+            r.placed_in = r.split
+        elif oos_mode == "separate":
+            r.placed_in = OOS_DIR
+        elif oos_mode == "keep" and r.split != "train":
+            r.placed_in = r.split
+        else:
+            r.placed_in = ""
+
+
+def oos_report(records: list[ImageRecord], remap: dict[int, int | None],
+               source_names: list[str], oos_ids: set[int], oos_mode: str) -> dict:
+    """Çıkarılan / korunan arka planlar ve karma görüntüler için sayılar."""
+    mods = ("gray", "rgb")
+    removed = {s: dict.fromkeys(mods, 0) for s in SPLITS}
+    by_class: dict = {}
+    for r in records:
+        if r.is_oos:
+            removed[r.split][r.modality] += 1
+            for c in r.oos_classes:
+                by_class.setdefault(c, {s: dict.fromkeys(mods, 0) for s in SPLITS})
+                by_class[c][r.split][r.modality] += 1
+    # Hedef kutusu olmayan ama çıkarılmayan görüntüler (kaynak sınıf kümesine göre)
+    retained: dict = {}
+    # Hedef kutusu OLAN ama kapsam dışı (eşlemesi None) kutu da taşıyan karma görüntüler
+    mixed = {s: {"images_with_oos_boxes": 0, "images_with_any_unmapped_boxes": 0} for s in SPLITS}
+    for r in records:
+        unmapped = {row.cls for row in r.rows if remap.get(row.cls) is None}
+        if r.out_rows:
+            if unmapped & oos_ids:
+                mixed[r.split]["images_with_oos_boxes"] += 1
+            if unmapped:
+                mixed[r.split]["images_with_any_unmapped_boxes"] += 1
+        elif not r.is_oos:
+            key = "+".join(sorted(source_names[c] for c in {row.cls for row in r.rows})) or "(etiketsiz)"
+            retained.setdefault(key, {s: dict.fromkeys(mods, 0) for s in SPLITS})
+            retained[key][r.split][r.modality] += 1
+    return {
+        "mode": oos_mode,
+        "classes": sorted(source_names[i] for i in oos_ids),
+        "removed_images": removed,
+        "removed_total": {s: sum(v.values()) for s, v in removed.items()},
+        "removed_by_source_class": by_class,
+        "retained_empty_background": retained,
+        "mixed_images": mixed,
+    }
+
+
 # ── Doğrulama ────────────────────────────────────────────────────────────────
 
 
@@ -638,12 +797,14 @@ def run(args: argparse.Namespace) -> dict:
         feats = list(ex.map(image_features, [r.image for r in records]))
     hashes = np.stack([f[1] for f in feats])
     thumbs = np.stack([f[2] for f in feats])
+    eval_thumbs = np.stack([f[3] for f in feats])
     for r, (chroma, *_) in zip(records, feats):
         r.chroma = chroma
         r.modality = "gray" if chroma < args.gray_thr else "rgb"
 
     # 3) Gruplama
-    pairs = find_near_duplicates(hashes, thumbs, args.hash_thr, args.ncc_thr)
+    pairs = find_near_duplicates(hashes, thumbs, args.hash_thr, args.ncc_thr,
+                                 ncc_only_thr=args.ncc_only_thr)
     for r, g in zip(records, build_groups([r.stem for r in records], pairs)):
         r.group = g
     n_groups = max(r.group for r in records) + 1
@@ -662,6 +823,12 @@ def run(args: argparse.Namespace) -> dict:
         r.split = SPLITS[assign[r.group]]
         r.out_rows = apply_remap(r.rows, remap)
 
+    # 4b) Kapsam dışı termal anomali arka planları: bölmeden SONRA filtrele
+    oos_ids = resolve_oos_classes(list(args.oos_classes), source_names)
+    mark_oos(records, oos_ids, source_names)
+    place_records(records, args.oos_mode)
+    placed = [r for r in records if r.placed_in in SPLITS]
+
     test_counts = Counter(names[row.cls] for r in records if r.split == "test" for row in r.out_rows)
     min_test_check = {
         n: {"required": k, "actual": test_counts.get(n, 0), "ok": test_counts.get(n, 0) >= k}
@@ -675,14 +842,17 @@ def run(args: argparse.Namespace) -> dict:
         )
 
     # 5) Yaz
-    for split in SPLITS:
-        (out / split / "images").mkdir(parents=True, exist_ok=True)
-        (out / split / "labels").mkdir(parents=True, exist_ok=True)
+    dests = list(SPLITS) + ([OOS_DIR] if any(r.placed_in == OOS_DIR for r in records) else [])
+    for dest in dests:
+        (out / dest / "images").mkdir(parents=True, exist_ok=True)
+        (out / dest / "labels").mkdir(parents=True, exist_ok=True)
 
     def _write(r: ImageRecord) -> None:
+        if not r.placed_in:
+            return
         # Kopya (bağlantı değil): Ultralytics bozuk JPEG'i yerinde onarabilir, kaynak korunmalı
-        shutil.copy2(r.image, out / r.split / "images" / r.image.name)
-        (out / r.split / "labels" / f"{r.image.stem}.txt").write_text(
+        shutil.copy2(r.image, out / r.placed_in / "images" / r.image.name)
+        (out / r.placed_in / "labels" / f"{r.image.stem}.txt").write_text(
             format_label_rows(r.out_rows), encoding="utf-8"
         )
 
@@ -692,11 +862,13 @@ def run(args: argparse.Namespace) -> dict:
     with open(out / "manifest.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["split", "file", "source_split", "stem", "group", "modality", "chroma",
-                    "n_rows_source", "n_rows_from_polygon", "n_rows_out"])
+                    "n_rows_source", "n_rows_from_polygon", "n_rows_out",
+                    "placed_in", "oos", "oos_source_classes"])
         for r in sorted(records, key=lambda x: (x.split, x.image.name)):
             w.writerow([r.split, r.image.name, r.source_split, r.stem, r.group, r.modality,
                         f"{r.chroma:.3f}", len(r.rows), sum(x.from_polygon for x in r.rows),
-                        len(r.out_rows)])
+                        len(r.out_rows), r.placed_in or "dropped", int(r.is_oos),
+                        "|".join(r.oos_classes)])
 
     yaml_path = out.parent / f"{out.name}.yaml"
     remap_lines = "\n".join(
@@ -708,6 +880,7 @@ def run(args: argparse.Namespace) -> dict:
         "# Otomatik üretildi: scripts/audit_and_fix_dataset.py\n"
         f"# Kaynak: {_rel(src)}\n"
         "# Poligonlar bbox'a çevrildi; bölme kaynak gövdesi + dHash grubu bazlı.\n"
+        f"# Kapsam dışı termal anomali arka planları train/valid/test dışında: oos/ (mod: {args.oos_mode}).\n"
         "# Sınıf eşleştirmesi:\n"
         f"{remap_lines}\n\n"
         + yaml.safe_dump(
@@ -731,14 +904,16 @@ def run(args: argparse.Namespace) -> dict:
 
     sizes = Counter(Counter(r.group for r in records).values())
     biggest = Counter(r.group for r in records).most_common(5)
-    split_sizes = Counter(r.split for r in records)
+    split_sizes = Counter(r.placed_in for r in records)
     report = {
         "source": _rel(src),
         "output": _rel(out),
         "data_yaml": _rel(yaml_path),
         "params": {
             "ratios": list(args.ratios), "seed": args.seed, "hash_thr": args.hash_thr,
-            "ncc_thr": args.ncc_thr, "gray_thr": args.gray_thr,
+            "ncc_thr": args.ncc_thr, "ncc_only_thr": args.ncc_only_thr,
+            "gray_thr": args.gray_thr, "oos_mode": args.oos_mode,
+            "oos_classes": list(args.oos_classes), "keep_original_classes": args.keep_original_classes,
         },
         "taxonomy": {
             "names": names,
@@ -763,14 +938,20 @@ def run(args: argparse.Namespace) -> dict:
         },
         "leakage_before": leakage_stats(records, "source_split", pairs),
         "leakage_after": leakage_stats(records, "split", pairs),
-        "split_sizes": {s: split_sizes.get(s, 0) for s in SPLITS},
+        "ncc_leakage_before": ncc_leakage(eval_thumbs, [r.source_split for r in records]),
+        "ncc_leakage_after": ncc_leakage(eval_thumbs, [r.placed_in for r in records]),
+        # OOS filtresinden bağımsız: tüm görüntüler atanmış bölmeleriyle (eşik karşılaştırması için)
+        "ncc_leakage_assigned": ncc_leakage(eval_thumbs, [r.split for r in records]),
+        "split_sizes": {**{s: split_sizes.get(s, 0) for s in (*SPLITS, OOS_DIR)},
+                       "dropped": split_sizes.get("", 0)},
+        "oos": oos_report(records, remap, source_names, oos_ids, args.oos_mode),
         "images_before": image_tables(records, "source_split", "rows"),
-        "images_after": image_tables(records, "split", "out_rows"),
+        "images_after": image_tables(placed, "split", "out_rows"),
         "classes_before_target": class_tables(
             [_with_rows(r, apply_remap(r.rows, remap)) for r in records],
             names, "out_rows", "source_split"),
-        "classes_after_target": class_tables(records, names, "out_rows", "split"),
-        "classes_after_source": class_tables(records, source_names, "rows", "split"),
+        "classes_after_target": class_tables(placed, names, "out_rows", "split"),
+        "classes_after_source": class_tables(placed, source_names, "rows", "split"),
         "min_test_check": min_test_check,
     }
     if not args.skip_verify:
@@ -797,6 +978,40 @@ def _table_md(tbl: dict, title: str) -> list[str]:
         vals = [mods["gray"][s] for s in SPLITS] + [mods["rgb"][s] for s in SPLITS]
         lines.append(f"| {name} | " + " | ".join(str(v) for v in vals) + f" | {sum(vals)} |")
     return hdr + lines + [""]
+
+
+def write_oos_md(oos: dict, sizes: dict) -> list[str]:
+    """Kapsam dışı (OOS) bölümü Markdown satırları."""
+    md = [
+        "## 4b. Kapsam dışı termal anomali arka planları (OOS)", "",
+        f"- Mod: `{oos['mode']}` — bölme tüm görüntülerle yapıldı, filtre bölmeden SONRA uygulandı",
+        f"- Çıkarma kümesi (kaynak sınıflar): {', '.join(oos['classes']) or '(boş)'}",
+        "- Kural: remap sonrası hedef kutusu kalmayan ve bu sınıflardan birini içeren görüntü. "
+        "Etiketsiz / yalnız Non Defective / Electrical Damage arka planları ve hedef kutusu olan "
+        "karma görüntüler korunur.",
+        f"- Yazılan: oos={sizes.get('oos', 0)}, atılan (yazılmayan)={sizes.get('dropped', 0)}", "",
+        "| Atanmış bölme | gri | RGB | Toplam |", "|---|---:|---:|---:|",
+    ]
+    for s in SPLITS:
+        r = oos["removed_images"][s]
+        md.append(f"| {s} | {r['gray']} | {r['rgb']} | {oos['removed_total'][s]} |")
+    md += ["", "Kaynak sınıfa göre (bir görüntü içerdiği her sınıfta sayılır):", "",
+           "| Kaynak sınıf | " + " | ".join(f"{s} gri | {s} RGB" for s in SPLITS) + " |",
+           "|---|" + "---:|" * (2 * len(SPLITS))]
+    for c, v in oos["removed_by_source_class"].items():
+        md.append(f"| {c} | " + " | ".join(f"{v[s]['gray']} | {v[s]['rgb']}" for s in SPLITS) + " |")
+    md += ["", "Çıkarılmayan, hedef kutusu olmayan arka planlar (kaynak sınıf kümesine göre; "
+           "gri+RGB toplamı):", "", "| Kaynak sınıf kümesi | " + " | ".join(SPLITS) + " |",
+           "|---|" + "---:|" * len(SPLITS)]
+    for c, v in sorted(oos["retained_empty_background"].items()):
+        md.append(f"| {c} | " + " | ".join(str(v[s]["gray"] + v[s]["rgb"]) for s in SPLITS) + " |")
+    md += ["", "Karma görüntüler (hedef kutusu + kapsam dışı kutu; remap sonrası anomali bölgesi "
+           "etiketsiz kalır, bu işte DEĞİŞTİRİLMEDİ):", "",
+           "| Bölme | OOS-sınıf kutusu içeren | Herhangi eşlenmemiş kutu içeren |", "|---|---:|---:|"]
+    for s in SPLITS:
+        m = oos["mixed_images"][s]
+        md.append(f"| {s} | {m['images_with_oos_boxes']} | {m['images_with_any_unmapped_boxes']} |")
+    return md + [""]
 
 
 def write_markdown(report: dict, path: Path) -> None:
@@ -834,8 +1049,10 @@ def write_markdown(report: dict, path: Path) -> None:
         "",
         f"- {g['images']} görüntü, {g['source_stems']} kaynak gövdesi, {g['groups']} grup",
         f"- {g['near_duplicate_pairs']} yakın kopya çifti (dHash ≤ {report['params']['hash_thr']}, "
-        f"çevirme duyarsız, NCC ≥ {report['params']['ncc_thr']}); "
-        f"{g['near_duplicate_pairs_cross_stem']} tanesi farklı gövdeler arasında",
+        f"çevirme duyarsız, NCC ≥ {report['params']['ncc_thr']}"
+        + (f"; ek NCC-tabanlı aday ≥ {report['params']['ncc_only_thr']}"
+           if report["params"].get("ncc_only_thr") is not None else "")
+        + f"); {g['near_duplicate_pairs_cross_stem']} tanesi farklı gövdeler arasında",
         f"- En büyük grup: {g['largest_groups'][0]['size']} görüntü" if g["largest_groups"] else "",
         "",
         "| Ölçüt | Önce (Roboflow bölmesi) | Sonra (yeni bölme) |",
@@ -851,6 +1068,21 @@ def write_markdown(report: dict, path: Path) -> None:
         f"| Train'de eşi olan test görüntüsü | {lb['test_images_with_train_twin']} / {lb['test_images']} "
         f"| {la['test_images_with_train_twin']} / {la['test_images']} |",
         "",
+        f"Bağımsız ölçüt: {EVAL_THUMB_SIZE}x{EVAL_THUMB_SIZE} küçük resim max-NCC (4 çevirme); "
+        "ilk bölmedeki görüntülerden, ikincideki en benzeriyle NCC eşiğini aşanların sayısı "
+        "(gruplama 32x32 kullandığı için bağımsızdır; yazılan görüntüler üzerinden).",
+        "",
+        "| Bölme çifti | " + " | ".join(f"≥{t:.2f} önce | ≥{t:.2f} sonra" for t in NCC_LEAK_THRESHOLDS) + " |",
+        "|---|" + "---:|" * (2 * len(NCC_LEAK_THRESHOLDS)),
+    ]
+    nb, na = report["ncc_leakage_before"], report["ncc_leakage_after"]
+    for k in na:
+        cells = " | ".join(
+            f"{nb[k][f'ge_{t:.2f}']}/{nb[k]['images']} | {na[k][f'ge_{t:.2f}']}/{na[k]['images']}"
+            for t in NCC_LEAK_THRESHOLDS)
+        md.append(f"| {k} | {cells} |")
+    md += [
+        "",
         "## 3. Bölme boyutları ve modalite",
         "",
         "| Bölme | Önce gri | Önce RGB | Sonra gri | Sonra RGB | Sonra arka plan |",
@@ -865,6 +1097,7 @@ def write_markdown(report: dict, path: Path) -> None:
     md += _table_md(report["classes_before_target"]["instances"], "Hedef sınıflar — önce (Roboflow bölmesi)")
     md += _table_md(report["classes_after_target"]["instances"], "Hedef sınıflar — sonra (yeni bölme)")
     md += _table_md(report["classes_after_source"]["instances"], "Orijinal 15 sınıf — yeni bölme")
+    md += write_oos_md(report["oos"], report["split_sizes"])
     md += ["## 5. Kontroller", ""]
     for n, v in report["min_test_check"].items():
         md.append(f"- Test `{n}` ≥ {v['required']}: {v['actual']} {'✓' if v['ok'] else '✗'}")
@@ -895,9 +1128,18 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--ratios", type=float, nargs=3, default=(0.8, 0.1, 0.1),
                    metavar=("TRAIN", "VALID", "TEST"), help="Bölme oranları")
     p.add_argument("--seed", type=int, default=42)
-    p.add_argument("--hash-thr", type=int, default=4, help="dHash Hamming eşiği (aday)")
-    p.add_argument("--ncc-thr", type=float, default=0.85,
+    p.add_argument("--hash-thr", type=int, default=8, help="dHash Hamming eşiği (aday)")
+    p.add_argument("--ncc-thr", type=float, default=0.90,
                    help="Aday çifti kabul için min. küçük resim korelasyonu (-1 = kapalı)")
+    p.add_argument("--ncc-only-thr", type=float, default=None,
+                   help="dHash'ten bağımsız ek aday: 32x32 NCC bu değeri aşan çiftler de birleşir "
+                        "(varsayılan: kapalı)")
+    p.add_argument("--oos-classes", nargs="*", default=list(OOS_DEFAULT_CLASSES),
+                   help="Kapsam dışı termal anomali kaynak sınıfları (ad ya da ID); hedef kutusu "
+                        "kalmayan ve bunları içeren görüntüler çıkarılır. Boş liste = kapalı")
+    p.add_argument("--oos-mode", choices=OOS_MODES, default="separate",
+                   help="separate: çıkarılanları oos/ kümesine yaz (varsayılan); drop: hiç yazma; "
+                        "keep: valid/test'te yerinde bırak (train'dekiler yine çıkarılır)")
     p.add_argument("--gray-thr", type=float, default=1.0,
                    help="Bu değerin altındaki kanal farkı → gri/termal")
     p.add_argument("--min-test", nargs="*", default=["hotspot=300"],
