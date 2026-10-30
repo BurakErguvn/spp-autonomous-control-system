@@ -176,8 +176,8 @@ def test_real_clean_no_stem_or_group_leak_across_splits():
         ims = {p.stem for p in (CLEAN / sp / "images").iterdir()}
         lbs = {p.stem for p in (CLEAN / sp / "labels").glob("*.txt")}
         assert ims == lbs
-        assert len(ims) == sum(1 for r in man if r["split"] == sp)
-    stems_by_split = {sp: {r["stem"] for r in man if r["split"] == sp} for sp in ("train", "valid", "test")}
+        assert len(ims) == sum(1 for r in man if r["placed_in"] == sp)
+    stems_by_split = {sp: {r["stem"] for r in man if r["placed_in"] == sp} for sp in ("train", "valid", "test")}
     assert not stems_by_split["train"] & stems_by_split["test"]
     assert not stems_by_split["train"] & stems_by_split["valid"]
     assert not stems_by_split["valid"] & stems_by_split["test"]
@@ -203,5 +203,241 @@ def test_real_clean_images_are_byte_identical_copies_of_raw():
         man = list(csv.DictReader(f))
     for r in man[::37]:  # örneklem
         a = RAW / r["source_split"] / "images" / r["file"]
-        b = CLEAN / r["split"] / "images" / r["file"]
+        if r["placed_in"] == "dropped":
+            continue
+        b = CLEAN / r["placed_in"] / "images" / r["file"]
         assert a.read_bytes() == b.read_bytes()
+
+
+# ── Kapsam dışı (OOS) filtresi + eşik parametreleri (#3, #6) ─────────────────
+
+from scripts.audit_and_fix_dataset import (  # noqa: E402
+    OOS_DEFAULT_CLASSES,
+    ImageRecord,
+    LabelRow,
+    mark_oos,
+    ncc_leakage,
+    parse_args,
+    place_records,
+    resolve_oos_classes,
+)
+from scripts.train_yolo26 import CLASS_REMAP  # noqa: E402
+
+SRC_NAMES = [
+    "Bird Drop", "Defective", "Dusty", "Electrical Damage", "Non Defective",
+    "Physical Damage", "Snow", "MultiByPassed", "MultiDiode", "MultiHotSpot",
+    "SingleByPassed", "SingleDiode", "SingleHotSpot", "StringOpenCircuit",
+    "StringReversedPolarity",
+]
+
+
+def test_default_thresholds_are_8_and_090():
+    args = parse_args([])
+    assert (args.hash_thr, args.ncc_thr, args.ncc_only_thr) == (8, 0.90, None)
+    assert args.oos_mode == "separate"
+    assert tuple(args.oos_classes) == OOS_DEFAULT_CLASSES
+    assert "Non Defective" not in OOS_DEFAULT_CLASSES
+    assert "Electrical Damage" not in OOS_DEFAULT_CLASSES
+
+
+def test_resolve_oos_classes_names_ids_and_unknown():
+    assert resolve_oos_classes(["multidiode", "13"], SRC_NAMES) == {8, 13}
+    with pytest.raises(ValueError):
+        resolve_oos_classes(["Nope"], SRC_NAMES)
+
+
+def _rec(split: str, classes: list[int]) -> ImageRecord:
+    rows = [LabelRow(c, 0.5, 0.5, 0.2, 0.2, False) for c in classes]
+    rec = ImageRecord(image=Path(f"x{split}{classes}.jpg"), source_split=split, stem="s", rows=rows,
+                      label_stats=Counter(), label_source="txt.orig")
+    rec.split = split
+    rec.out_rows = [r._replace(cls=CLASS_REMAP[r.cls]) for r in rows if CLASS_REMAP[r.cls] is not None]
+    return rec
+
+
+def test_mark_oos_keeps_non_defective_unlabeled_mixed_and_electrical():
+    oos_ids = resolve_oos_classes(list(OOS_DEFAULT_CLASSES), SRC_NAMES)
+    cases = {
+        "diode": _rec("train", [8, 11]),            # yalnız termal anomali → OOS
+        "nondef": _rec("train", [4]),               # gerçek arka plan → kalır
+        "unlabeled": _rec("train", []),             # etiketsiz → kalır
+        "elec": _rec("train", [3]),                 # Electrical Damage → kalır (alan kararı bekliyor)
+        "mixed": _rec("train", [12, 8]),            # hotspot + MultiDiode → kalır
+        "diode_nondef": _rec("train", [8, 4]),      # anomali + Non Defective → OOS
+    }
+    mark_oos(list(cases.values()), oos_ids, SRC_NAMES)
+    flags = {k: v.is_oos for k, v in cases.items()}
+    assert flags == {"diode": True, "nondef": False, "unlabeled": False, "elec": False,
+                     "mixed": False, "diode_nondef": True}
+    assert cases["diode"].oos_classes == ("MultiDiode", "SingleDiode")
+    # Karma görüntüde anomali sınıfı kayıtlı kalır ama is_oos değil
+    assert cases["mixed"].oos_classes == ("MultiDiode",)
+
+
+def test_place_records_modes():
+    oos_ids = resolve_oos_classes(list(OOS_DEFAULT_CLASSES), SRC_NAMES)
+
+    def placed(mode: str) -> dict[str, str]:
+        recs = [_rec("train", [8]), _rec("valid", [8]), _rec("test", [4]), _rec("test", [8])]
+        mark_oos(recs, oos_ids, SRC_NAMES)
+        place_records(recs, mode)
+        return {f"{r.split}{int(r.is_oos)}": r.placed_in for r in recs}
+
+    assert placed("separate") == {"train1": "oos", "valid1": "oos", "test0": "test", "test1": "oos"}
+    assert placed("drop") == {"train1": "", "valid1": "", "test0": "test", "test1": ""}
+    assert placed("keep") == {"train1": "", "valid1": "valid", "test0": "test", "test1": "test"}
+    with pytest.raises(ValueError):
+        place_records([], "bogus")
+
+
+def test_ncc_only_candidates_catch_what_dhash_misses():
+    a = thumbnail(_synthetic(0))
+    hashes = np.stack([dhash_variants(_synthetic(1)), dhash_variants(_synthetic(2))])  # alakasız hash
+    thumbs = np.stack([a, a])
+    assert find_near_duplicates(hashes, thumbs, hash_thr=4, ncc_thr=0.9) == []
+    got = find_near_duplicates(hashes, thumbs, hash_thr=4, ncc_thr=0.9, ncc_only_thr=0.95)
+    assert [(i, j) for i, j, *_ in got] == [(0, 1)] and got[0][3] == pytest.approx(1.0, abs=1e-4)
+
+
+def test_ncc_leakage_counts_flipped_twin_and_ignores_unplaced():
+    g = [_synthetic(i) for i in range(4)]
+    thumbs = np.stack([thumbnail(g[0], 24), thumbnail(cv2.flip(g[0], 1), 24),
+                       thumbnail(g[1], 24), thumbnail(g[2], 24), thumbnail(g[0], 24)])
+    out = ncc_leakage(thumbs, ["train", "test", "test", "valid", ""])
+    assert out["test-train"]["images"] == 2
+    assert out["test-train"]["ge_0.90"] == 1 and out["test-train"]["ge_0.97"] == 1
+    assert out["valid-train"]["ge_0.90"] == 0
+    assert out["test-valid"]["images"] == 2
+
+
+@pytest.fixture()
+def oos_src(tmp_path: Path) -> Path:
+    """Hotspot, MultiDiode (OOS), Non Defective, Electrical Damage, karma ve etiketsiz görüntüler."""
+    src = tmp_path / "oos_src"
+    rng = np.random.default_rng(3)
+    cycle = ["9 0.5 0.5 0.2 0.2", "8 0.5 0.5 0.2 0.2", "4 0.5 0.5 0.2 0.2", "3 0.5 0.5 0.2 0.2",
+             "9 0.3 0.3 0.2 0.2\n8 0.7 0.7 0.2 0.2", "", "1 0.5 0.5 0.2 0.2"]
+    for i in range(70):
+        split = ["train", "valid", "test"][i % 3]
+        g = cv2.resize(cv2.GaussianBlur(rng.integers(0, 255, (48, 48), dtype=np.uint8), (0, 0), 2), (96, 96))
+        d = src / split
+        (d / "images").mkdir(parents=True, exist_ok=True)
+        (d / "labels").mkdir(parents=True, exist_ok=True)
+        cv2.imwrite(str(d / "images" / f"o{i}_jpg.rf.{i}.jpg"), cv2.cvtColor(g, cv2.COLOR_GRAY2BGR))
+        (d / "labels" / f"o{i}_jpg.rf.{i}.txt").write_text(cycle[i % len(cycle)] + "\n")
+    return src
+
+
+def _manifest(out: Path) -> list[dict]:
+    with open(out / "manifest.csv", encoding="utf-8") as f:
+        return list(csv.DictReader(f))
+
+
+def _run_oos(src: Path, out: Path, reports: Path, *extra: str) -> int:
+    return _run(src, out, reports, "--ratios", "0.5", "0.25", "0.25", *extra)
+
+
+def test_oos_separate_default_writes_oos_set_and_keeps_split_assignment(oos_src: Path, tmp_path: Path):
+    out = tmp_path / "sep"
+    assert _run_oos(oos_src, out, tmp_path / "rs") == 0
+    man = _manifest(out)
+    oos_rows = [r for r in man if r["oos"] == "1"]
+    assert oos_rows and all(r["oos_source_classes"] == "MultiDiode" for r in oos_rows)
+    assert all(r["placed_in"] == "oos" for r in oos_rows)
+    # Atanmış bölme korunur (train grubundan gelenler ayırt edilebilir)
+    assert {r["split"] for r in oos_rows} == {"train", "valid", "test"}
+    # Non Defective, Electrical Damage, karma, etiketsiz kalır
+    kept_files = {p.name for sp in ("train", "valid", "test") for p in (out / sp / "images").iterdir()}
+    for r in man:
+        label_cls = [int(x.split()[0]) for x in
+                     (out / r["placed_in"] / "labels" / f"{Path(r['file']).stem}.txt").read_text().splitlines()
+                     ] if r["placed_in"] != "dropped" else []
+        if r["oos"] == "1":
+            assert r["file"] not in kept_files and label_cls == []
+        else:
+            assert r["file"] in kept_files
+    nondef = [r for r in man if r["placed_in"] in ("train", "valid", "test") and r["n_rows_source"] == "1"
+              and r["n_rows_out"] == "0"]
+    assert nondef, "Non Defective / Electrical Damage arka planları korunmalı"
+    n_oos_files = len(list((out / "oos" / "images").iterdir()))
+    assert n_oos_files == len(oos_rows)
+    # Grup bütünlüğü atanmış bölmeler üzerinden
+    g = defaultdict(set)
+    for r in man:
+        g[r["group"]].add(r["split"])
+    assert all(len(v) == 1 for v in g.values())
+
+
+def test_oos_modes_do_not_change_split_assignment(oos_src: Path, tmp_path: Path):
+    maps = {}
+    for mode in ("separate", "keep", "drop"):
+        out = tmp_path / mode
+        assert _run_oos(oos_src, out, tmp_path / f"r{mode}", "--oos-mode", mode) == 0
+        maps[mode] = {r["file"]: (r["group"], r["split"], r["placed_in"]) for r in _manifest(out)}
+    base = {f: v[:2] for f, v in maps["separate"].items()}
+    assert all({f: v[:2] for f, v in m.items()} == base for m in maps.values())
+    oos = {f for f, v in maps["separate"].items() if v[2] == "oos"}
+    assert oos and all(maps["drop"][f][2] == "dropped" for f in oos)
+    assert not (tmp_path / "drop" / "oos").exists()
+    for f in oos:
+        sp = maps["keep"][f][2]
+        assert sp == ("dropped" if maps["keep"][f][1] == "train" else maps["keep"][f][1])
+    # Hiçbir modda oos dışı görüntünün yeri değişmez
+    for f, v in maps["separate"].items():
+        if v[2] != "oos":
+            assert maps["keep"][f][2] == maps["drop"][f][2] == v[2]
+
+
+def test_oos_classes_empty_disables_filter(oos_src: Path, tmp_path: Path):
+    out = tmp_path / "noflt"
+    assert main(["--src", str(oos_src), "--out", str(out), "--report-dir", str(tmp_path / "rn"),
+                 "--min-test", "hotspot=0", "--workers", "2", "--skip-verify",
+                 "--ratios", "0.5", "0.25", "0.25", "--oos-classes"]) == 0
+    assert all(r["oos"] == "0" and r["placed_in"] == r["split"] for r in _manifest(out))
+    assert not (out / "oos").exists()
+
+
+def test_keep_original_classes_gives_same_split_as_three_class(oos_src: Path, tmp_path: Path):
+    assert _run_oos(oos_src, tmp_path / "c3", tmp_path / "r3") == 0
+    assert _run_oos(oos_src, tmp_path / "c15", tmp_path / "r15", "--keep-original-classes") == 0
+    a = {r["file"]: (r["group"], r["split"]) for r in _manifest(tmp_path / "c3")}
+    b = {r["file"]: (r["group"], r["split"]) for r in _manifest(tmp_path / "c15")}
+    assert a == b
+    # 15 sınıflı modda hedef kutusu eşlemesi kalkmaz: OOS işaretlenmez
+    assert all(r["oos"] == "0" for r in _manifest(tmp_path / "c15"))
+
+
+@needs_data
+def test_real_clean_oos_set_is_separated_and_consistent():
+    man = _manifest(CLEAN)
+    oos = [r for r in man if r["oos"] == "1"]
+    if not oos:
+        pytest.skip("data/ges_clean OOS filtresiz üretilmiş")
+    assert all(r["placed_in"] in ("oos", "dropped") or r["split"] != "train" for r in oos)
+    in_splits = {p.name for sp in ("train", "valid", "test") for p in (CLEAN / sp / "images").iterdir()}
+    oos_dir = CLEAN / "oos"
+    if oos_dir.exists():
+        oos_files = {p.name for p in (oos_dir / "images").iterdir()}
+        assert oos_files == {r["file"] for r in oos if r["placed_in"] == "oos"}
+        assert not oos_files & in_splits
+        assert all((p.read_text() == "") for p in (oos_dir / "labels").glob("*.txt"))
+    # OOS yalnız termal anomali sınıfı taşır; Non Defective / Electrical Damage tek başına OOS değil
+    allowed = set(OOS_DEFAULT_CLASSES)
+    for r in oos:
+        assert set(r["oos_source_classes"].split("|")) <= allowed
+        assert r["n_rows_out"] == "0"
+    # Her OOS görüntüsü, atanmış bölmesinin grubuyla tutarlı (grup tek bölmede)
+    groups = defaultdict(set)
+    for r in man:
+        groups[r["group"]].add(r["split"])
+    assert all(len(v) == 1 for v in groups.values())
+
+
+@pytest.mark.skipif(not (REPO / "outputs" / "reports" / "dataset_audit.json").exists(), reason="rapor yok")
+def test_committed_report_records_thresholds_and_zero_corrupt():
+    import json
+    rep = json.loads((REPO / "outputs" / "reports" / "dataset_audit.json").read_text(encoding="utf-8"))
+    assert (rep["params"]["hash_thr"], rep["params"]["ncc_thr"]) == (8, 0.90)
+    assert rep["leakage_after"]["groups_spanning_multiple_splits"] == 0
+    assert rep["ultralytics_verify"]["total_corrupt"] == 0
+    assert rep["oos"]["removed_total"]["train"] > 0
