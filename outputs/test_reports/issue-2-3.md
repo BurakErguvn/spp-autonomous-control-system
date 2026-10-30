@@ -1,4 +1,62 @@
-# Test Raporu — Issue #2 ve #3 (dal `claude/sad-margulis-eb217f`, `b485ecb`)
+# Test Raporu — Issue #2, #3, #6 — 2. tur (dal `claude/sad-margulis-eb217f`, HEAD `08ef0c4`)
+
+KARAR: PASS (koşullu) — 2e505fa..08ef0c4 değişiklikleri (8/0.90/ncc-only 0.93, OOS ayrımı, Electrical Damage) bağımsız olarak yeniden üretildi; kod/veri hatası yok. Koşullar: aşağıdaki iki bilgi/düşük bulgu (artık sızıntı, `--ncc-only-thr` negatif değer) kullanıcının bilmesi için; kabul kriterlerini bozmaz.
+
+## Kabul kriterleri
+- [x] #2: Ultralytics 8.4.41 doğrulaması 0 corrupt (tester yeniden üretimi: train 5337 / valid 640 / test 606, `check_det_dataset` nc=3 ok); tüm etiketler 5 sütun, [0,1], sınıf 0-2 (kötü satır 0); poligon→bbox korunuyor; ham veri değişmedi (en yeni mtime 2026-05-02; 9196/9196 görüntü ham ile bayt-bayt aynı)
+- [x] #3: bölmeler arası stem ve grup kesişimi 0 (hem `placed_in` hem atanmış `split` açısından, OOS dahil); test hotspot 1290 (>=300); hotspot/mikro_catlak/tozlanma train/valid/test = 80.0/10.0/10.0, 80.1/9.9/10.0, 82.2/8.3/9.5 %; görüntü 81.1/9.7/9.2 %
+- [x] #6: OOS ayrımı ham `.txt.orig` etiketlerinden bağımsız hesapla birebir doğru (aşağıda)
+
+## Bulgular
+1. BİLGİ/DÜŞÜK-ORTA (alan kararı değil, farkındalık) — artık yakın-kopya sızıntısı: eşikler 8/0.90/0.93 ile bile 24x24 max-NCC (4 çevirme) >=0.90 olan görüntüler kalıyor: test->train 15/606, valid->train 15/640, test->valid 4/606 (>=0.95 ve >=0.97: 0). Görsel kontrol: iki tür var — (i) gerçekten aynı uçuşun ardışık kareleri (ör. `DJI_20220810095449_0075` test vs `..._0076` train, NCC24 0.934; `Physical_Damge_536` test vs `_528` valid, 0.947) ve (ii) aynı santralin benzer dizilişli ama farklı kareleri. 32x32 NCC'si 0.93 altında kaldıkları için birleşmediler. Bağımsız ölçüm (16x16 bulanık bilinear NCC + DCT pHash<=6 & NCC>=0.9): test->train 0, valid->train 0, test->valid 1. Etki küçük (test'in ~%2.5'i, metrik şişmesi sınırlı); isterse `--ncc-only-thr 0.90` ile kapanır ama daha fazla ilgisiz birleşme/büyük grup riski getirir. Karar kullanıcıda (eşik).
+2. DÜŞÜK — `scripts/audit_and_fix_dataset.py:808` — `args.ncc_only_thr if (args.ncc_only_thr or 2) <= 1 else None`: `--ncc-only-thr 0` sessizce kapatır, `-1` ise (`--ncc-thr -1`'in "kapalı" kuralının aksine) AKTİF olur ve `ncc_best >= -1` ile tüm çiftleri birleştirir (tek dev grup, bölme çöker). Yeniden üretme: `for v in (-1, 0, 0.93, 2): print(v, (v or 2) <= 1)` -> -1 aktif, 0 kapalı. Öneri: negatif/<=0 değeri hata ver ya da "kapalı" say; yardım metni "1'den büyük" diyor, bu yüzden varsayılan kullanım etkilenmiyor.
+3. DÜŞÜK — modalite dengesi: gri tozlanma (çok küçük sınıf-modalite hücresi) train/valid/test = 39/3/23 (eski bölmede 53/11/1); tozlanma toplamı 4067/409/472. RGB hücreleri dengeli. Gri-modalite tozlanma için tek başına anlamlı metrik çıkmaz (n=23 test). Ayrıca arka plan (hedefsiz) oranı test'te %6.8, train/valid %3.6 (41/606 vs 193/5337) — test arka plan sayısı küçük (41), yanlış pozitif oranı ölçümü gürültülü olabilir.
+4. BİLGİ — karma görüntüler: 1526 görüntü (train 1263, valid 133, test 130) hedef kutusu olmasına rağmen OOS sınıf kutusu (diode/bypass vb.) da taşıyor; anomali bölgesi etiketsiz kalıyor. Rapor bunu zaten belirtiyor ("bu işte DEĞİŞTİRİLMEDİ"); bunlar train'de örtük negatif olarak duruyor. Alan kararı, kapsam dışı.
+5. DÜŞÜK — `data/ges_clean.yaml` yalnızca `train/val/test` yollarını yazıyor; `oos/` için anahtar yok (Ultralytics'in tanımadığı anahtar zaten gerekmez; ayrı bir inference/negatif-test değerlendirmesi için yol elle verilmeli). `path: data/ges_clean` göreli (proje kökünden çalıştırın). Önceki rapor bulgu 5 ile aynı.
+6. DÜŞÜK (test) — `tests/test_audit_dataset_extra.py:~400` yorumu eski ("Non Defective / Electrical Damage tek başına OOS değil") — Electrical Damage artık OOS; kod/doğrulama doğru, yalnız yorum bayat.
+7. BİLGİ — yazma hook'u (`guard.py:98`) `.claude/worktrees/...` altındaki yolları çalışma ağacı yerine ana depo köküne göre değerlendirip `.claude/` önekiyle reddediyor; worktree içindeki `tests/`, `outputs/test_reports/` dosyalarına Edit/Write ile yazılamıyor (Bash ile yazıldı). Orkestratör/kullanıcı için hook düzeltmesi önerilir (rol izinleri yine `tests/**` ve `outputs/test_reports/**`).
+
+## İddia vs bağımsız değer
+| Kalem | İddia | Tester |
+|---|---|---|
+| pytest `--ignore=tests/test_gui.py` | 84 passed, 4 skipped; veri bağıyla 88 | 84 passed, 4 skipped; veri bağıyla 88 passed (tester testleri eklenince 86+8 skip / 94 passed) |
+| Görüntü train/valid/test/oos | 5337/640/606/2613 (9196) | 5337/640/606/2613 (9196) |
+| Çift / grup / en büyük grup | 901 / 2799 / 45 | 901 / 2799 / 45 (singleton 398) |
+| Hotspot instance | 10349/1294/1290 | 10349/1294/1290 (etiket dosyalarından) |
+| Sızıntı >=.90/.95/.97 test->train, valid->train, test->valid | 15/0/0, 15/0/0, 4/0/0 | 15/0/0, 15/0/0, 4/0/0 (kendi 24x24 NCC uygulamam, aynı yöntem) |
+| Stem/grup kesişimi | 0 | 0 (placed_in ve split, stem+grup) |
+| OOS kaynak sınıf (görüntü sayısı) | SingleByPassed 1254, SingleDiode 572, StringOpenCircuit 499, MultiDiode 313, MultiByPassed 225, StringReversedPolarity 80, Electrical Damage 52 | aynı (ham etiketlerden); ED: 31 yalnız ED + 21 ED+Non Defective; ED+başka sınıf 0 |
+| Arka plan train/valid/test | 193 (%3.6)/23/41 | 193/23/41 = 257 (250 yalnız Non Defective + 7 etiketsiz) |
+| OOS atanmış bölme | — | train 2019, valid 280, test 314 (rapor `removed_total` ile aynı) |
+| Karma görüntü (OOS kutulu / herhangi eşlenmemiş) | rapor | 1263/1472, 133/166, 130/144 (bağımsız hesapla aynı) |
+| Ultralytics corrupt | 0 | 0 |
+
+## OOS doğruluğu (ham `.txt.orig` etiketlerinden, sabit sınıf ID'leriyle)
+- (a) OOS'a giden her görüntü: hedef sınıf yok ve en az bir OOS sınıfı var — 2613/2613, ihlal 0
+- (b) Koşulu sağlayıp OOS'a gitmeyen görüntü — 0
+- (c) Hedef kutusu olan görüntü OOS'ta — 0
+- (d) Split dizinlerinde hedefsiz kalanlar yalnız Non Defective (250) / etiketsiz (7) — ihlal 0
+- (e) `oos/labels` 2613 dosya, hepsi boş; görüntü–etiket stem eşleşmesi tam; split dizinlerinde de görüntü=etiket; `manifest.placed_in` dosya sistemiyle 9196/9196 uyumlu
+- Bunlar `tests/test_audit_dataset_oos_independent.py` içinde kalıcı teste çevrildi.
+
+## Determinizm ve modlar
+- `python scripts/audit_and_fix_dataset.py --src <ham> --out <scratch>/a/ges_clean --report-dir <scratch>/a/reports` (35 sn): mevcut `data/ges_clean` ile `diff -rq` farksız; rapor JSON'u yol alanları (`source/output/data_yaml`) dışında aynı.
+- `--oos-mode keep` (train 5337 / valid 920 / test 920 / oos 0 / atılan 2019), `drop` (5337/640/606/0/2613), `--keep-original-classes` (7356/920/920, OOS işaretlenmez) ve varsayılan `separate`: dört manifestte (dosya -> grup, atanmış bölme) 9196/9196 aynı. `drop` ile `separate` split içerikleri aynı.
+
+## Zincirleme / grup yapısı
+- Grup boyutları: en büyüğü 45 (önceki rapor: 66), ilk 12: 45,34,33,17,16,15,14,13x5; >=10 görüntülü 30 grup; 398 tekil. Zincirleme kontrolü: 901 çiftin 58'i dosya-adı öneki farklı görüntüleri bağlıyor (öneki rastgele numaralı Roboflow adları da dahil, ölçüt kaba). NCC-only ile kurulan 27 farklı-önekli kenardan 6 rastgele örnek görsel incelendi: hepsi aynı santral/dizilişin benzer kareleri (satır yapısı aynı), ilgisiz sahne birleşmesi görülmedi; 34'lük grupta `210915_Hangchon_33m` + `Thermal_Solar` + `Physical_Damge` gibi karma önekler var, ama devasa grup oluşmuyor (en büyük %0,5 veri). Muhafazakâr birleşme: sızıntıyı azaltır, tabakalama maliyeti küçük.
+
+## Test incelemesi (yeni testler)
+Tautoloji yok: OOS testleri sabit beklenti tabloları kullanıyor (`_rec` + `CLASS_REMAP`, sonuç elle yazılı bayraklar); mod testleri atanmış bölmenin 3 modda aynı olduğunu manifestlerden karşılaştırıyor; `ncc_leakage` testi çevrilmiş ikiz ve yazılmayan ("") görüntüyü sınıyor. Eksikler ve eklenenler (`tests/test_audit_dataset_oos_independent.py`, 6 test): (1) ham etiketlerden bağımsız OOS üyeliği kuralı, (2) kalan arka planlar yalnız Non Defective/etiketsiz + oos etiketleri boş, (3) grup/stem kesişimi hem `placed_in` hem `split` ile, (4) bölme oranları ve hotspot tabanı, (5) NCC-only negatif durum (eşik altı çift birleşmez, eşik düşünce birleşir), (6) çevirilmiş ikiz dHash eşleşmesi olmadan yakalanır. Mevcut `test_ncc_only_candidates...` yalnız pozitif durumu sınıyordu.
+
+## Gözlemler (kapsam dışı)
+- `scripts/train_yolo26.py` hâlâ `ges_project.yaml` + ham veride yerinde remap yapıyor (önceki rapor bulgu 3); eğitim `ges_clean.yaml`'a bağlanmalı.
+- `tests/test_gui.py` ortam (Qt) hatası değişmedi.
+- Scratch: `/tmp/claude-1000/-home-berguven-Belgeler-disiplinlerarasi/9fb0f889-4789-4f9f-9ace-7c0307edf652/scratchpad/t2/` (üretimler `a`, `keep`, `drop`, `k15`; betikler `oos_check.py`, `leak.py`, `leak2.py`, `chain.py`).
+
+---
+
+# (1. tur) Test Raporu — Issue #2 ve #3 (`b485ecb`)
 
 KARAR: PASS (koşullu) — iki issue'nun kabul kriterleri de bağımsız olarak yeniden üretildi ve karşılandı; koşullar "Bulgular" bölümündeki orta önemli iki alan kararıdır (kod hatası yok).
 
